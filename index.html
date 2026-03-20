@@ -7,10 +7,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --primary: #0a192f; /* Azul Tático */
-            --secondary: #112240; /* Fundo de Cards */
-            --accent: #ffd600; /* Amarelo Operacional */
-            --bg: #0d1117; /* Fundo Escuro */
+            --primary: #0a192f;
+            --secondary: #112240;
+            --accent: #ffd600;
+            --bg: #0d1117;
             --text: #e6edf3;
             --white: #ffffff;
             --danger: #f85149;
@@ -18,127 +18,36 @@
             --border: #30363d;
         }
         
-        body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            color: var(--text); 
-            padding-bottom: 80px; 
-        }
-        
-        .header { 
-            background: var(--primary); 
-            color: var(--white); 
-            padding: 12px; 
-            border-bottom: 2px solid var(--accent);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        .header { background: var(--primary); color: var(--white); padding: 12px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
         .header h1 { margin: 0; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
         .status-dot { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 8px #2ea043; }
-
         .container { padding: 12px; max-width: 600px; margin: auto; }
-        
-        .card { 
-            background: var(--secondary); 
-            border-radius: 4px; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            border: 1px solid var(--border);
-        }
-        
-        .card h3 { 
-            margin-top: 0; 
-            color: var(--accent); 
-            border-bottom: 1px solid var(--border); 
-            padding-bottom: 8px; 
-            font-size: 0.85rem; 
-            text-transform: uppercase;
-        }
-        
+        .card { background: var(--secondary); border-radius: 4px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .card h3 { margin-top: 0; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; font-size: 0.85rem; text-transform: uppercase; }
         label { display: block; margin-top: 10px; font-weight: 600; font-size: 0.7rem; color: #8b949e; text-transform: uppercase; }
-        
-        input, select, textarea { 
-            width: 100%; 
-            padding: 10px; 
-            margin-top: 5px; 
-            background: #0d1117;
-            border: 1px solid var(--border); 
-            border-radius: 4px; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            color: var(--white);
-        }
-        
-        .btn { 
-            border: none; 
-            padding: 12px; 
-            border-radius: 4px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            width: 100%; 
-            margin-top: 10px; 
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-        
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; background: #0d1117; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-size: 1rem; color: var(--white); }
+        .btn { border: none; padding: 12px; border-radius: 4px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; }
         .btn-save { background: var(--success); color: white; }
         .btn-delete { background: #484f58; color: white; }
         .btn-pdf { background: #1f6feb; color: white; }
-        
-        .nav-bar { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            background: var(--primary); 
-            display: flex; 
-            border-top: 1px solid var(--accent); 
-            padding: 8px 0; 
-            z-index: 100; 
-        }
-        
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); display: flex; border-top: 1px solid var(--accent); padding: 8px 0; z-index: 100; }
         .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
         .nav-item.active { color: var(--accent); }
         .nav-item div { font-size: 1.2rem; margin-bottom: 2px; }
-
         .hidden { display: none !important; }
-
         .viatura-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,214,0,0.05); padding: 10px; border-radius: 4px; border: 1px dashed var(--accent); }
-        
         .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .check-item { 
-            background: #161b22; 
-            padding: 10px; 
-            border-radius: 4px; 
-            text-align: center; 
-            cursor: pointer; 
-            border: 1px solid var(--border); 
-            font-size: 0.65rem; 
-            font-weight: bold;
-        }
+        .check-item { background: #161b22; padding: 10px; border-radius: 4px; text-align: center; cursor: pointer; border: 1px solid var(--border); font-size: 0.65rem; font-weight: bold; }
         .check-item.ok { border-color: #238636; color: #39d353; background: rgba(35, 134, 54, 0.1); }
         .check-item.pendencia { border-color: #f85149; color: #ff7b72; background: rgba(248, 81, 73, 0.1); }
-        
-        /* Layout Postos (Revertido para cards editáveis) */
         .posto-item { border-left: 4px solid var(--accent); position: relative; }
         .editable-field { background: #0d1117; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin: 5px 0; font-size: 0.8rem; min-height: 20px; color: #c9d1d9; }
         .btn-row { display: flex; gap: 5px; margin-top: 10px; }
         .btn-action { font-size: 0.7rem; padding: 6px; }
         .delete-icon { position: absolute; top: 10px; right: 10px; color: #6e7681; cursor: pointer; }
-        
         #preview-foto { width: 100%; border-radius: 4px; margin-top: 10px; display: none; border: 1px solid var(--border); }
-        
-        .ronda-entry { 
-            padding: 10px; 
-            border-bottom: 1px solid var(--border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: #0d1117;
-            margin-bottom: 5px;
-            border-radius: 4px;
-        }
+        .ronda-entry { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0d1117; margin-bottom: 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -188,9 +97,11 @@
             </div>
         </div>
         <label>Notas de Campo:</label> <textarea id="r-obs" rows="2"></textarea>
+        
         <label>Evidência Fotográfica:</label>
-        <input type="file" id="r-foto" accept="image/*" capture="camera" onchange="previewImage(this)">
+        <input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
         <img id="preview-foto" src="#" alt="Preview">
+        
         <button class="btn btn-save" onclick="salvarRonda()">FINALIZAR REGISTRO</button>
     </div>
     <div class="card">
@@ -266,6 +177,10 @@
         lista.innerHTML = "";
         db.postos.sort((a,b) => a.nome.localeCompare(b.nome)).forEach((p, index) => {
             if(p.nome.toLowerCase().includes(busca)) {
+                // AJUSTE NO LINK DA ROTA (URL UNIVERSAL)
+                const queryMaps = encodeURIComponent(p.nome + " " + p.endereco);
+                const linkRota = `https://www.google.com/maps/search/?api=1&query=${queryMaps}`;
+
                 lista.innerHTML += `
                     <div class="card posto-item">
                         <span class="delete-icon" onclick="excluirPosto(${index})">✕</span>
@@ -273,7 +188,7 @@
                         <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].endereco=this.innerText;saveDB()">${p.endereco || 'Toque para editar endereço'}</div>
                         <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].telefone=this.innerText;saveDB()">${p.telefone || 'Toque para editar telefone'}</div>
                         <div class="btn-row">
-                            <button class="btn btn-pdf btn-action" onclick="window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('${p.nome} ${p.endereco}'))">ROTA</button>
+                            <button class="btn btn-pdf btn-action" onclick="window.open('${linkRota}', '_blank')">ROTA</button>
                             <button class="btn btn-save btn-action" onclick="location.href='tel:${p.telefone}'">LIGAR</button>
                         </div>
                     </div>`;
@@ -310,6 +225,7 @@
 
     function previewImage(i) {
         const f = i.files[0];
+        if(!f) return;
         const r = new FileReader();
         r.onload = (e) => { 
             fotoBase64 = e.target.result; 
@@ -322,7 +238,7 @@
     function salvarRonda() {
         const km = document.getElementById('r-km').value;
         const posto = document.getElementById('r-posto').value;
-        if(!km || !posto || !fotoBase64) return alert("DADOS INCOMPLETOS");
+        if(!km || !posto || !fotoBase64) return alert("DADOS INCOMPLETOS: Preencha KM e Foto.");
         const novaRonda = {
             data: new Date().toLocaleDateString(),
             hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
@@ -336,7 +252,7 @@
         };
         db.rondas.push(novaRonda);
         saveDB();
-        alert("REGISTRO SALVO");
+        alert("REGISTRO SALVO COM SUCESSO");
         resetFormRonda();
         renderRondas();
     }
@@ -391,7 +307,7 @@
         if(!db.rondas.length) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFont("helvetica", "bold"); doc.text("FECHAMENTO DE PLANTÃO OPERACIONAL", 10, 15);
+        doc.setFont("helvetica", "bold"); doc.text("RESUMO DE PLANTÃO OPERACIONAL", 10, 15);
         let y = 30;
         db.rondas.forEach((r, i) => {
             doc.text(`${i+1}. ${r.hora} - ${r.posto} (KM: ${r.km}) - ${r.motivo}`, 10, y);
