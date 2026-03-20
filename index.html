@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FortGuard - Ronda Fácil</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #0a192f; /* Azul Tático */
+            --secondary: #112240; /* Fundo de Cards */
+            --accent: #ffd600; /* Amarelo Operacional */
+            --bg: #0d1117; /* Fundo Escuro */
+            --text: #e6edf3;
+            --white: #ffffff;
+            --danger: #f85149;
+            --success: #238636;
+            --border: #30363d;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            padding-bottom: 80px; 
+        }
+        
+        .header { 
+            background: var(--primary); 
+            color: var(--white); 
+            padding: 12px; 
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .status-dot { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 8px #2ea043; }
+
+        .container { padding: 12px; max-width: 600px; margin: auto; }
+        
+        .card { 
+            background: var(--secondary); 
+            border-radius: 4px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--border);
+        }
+        
+        .card h3 { 
+            margin-top: 0; 
+            color: var(--accent); 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 8px; 
+            font-size: 0.85rem; 
+            text-transform: uppercase;
+        }
+        
+        label { display: block; margin-top: 10px; font-weight: 600; font-size: 0.7rem; color: #8b949e; text-transform: uppercase; }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            background: #0d1117;
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            color: var(--white);
+        }
+        
+        .btn { 
+            border: none; 
+            padding: 12px; 
+            border-radius: 4px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 10px; 
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+        
+        .btn-save { background: var(--success); color: white; }
+        .btn-delete { background: #484f58; color: white; }
+        .btn-pdf { background: #1f6feb; color: white; }
+        
+        .nav-bar { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: var(--primary); 
+            display: flex; 
+            border-top: 1px solid var(--accent); 
+            padding: 8px 0; 
+            z-index: 100; 
+        }
+        
+        .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item div { font-size: 1.2rem; margin-bottom: 2px; }
+
+        .hidden { display: none !important; }
+
+        .viatura-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,214,0,0.05); padding: 10px; border-radius: 4px; border: 1px dashed var(--accent); }
+        
+        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .check-item { 
+            background: #161b22; 
+            padding: 10px; 
+            border-radius: 4px; 
+            text-align: center; 
+            cursor: pointer; 
+            border: 1px solid var(--border); 
+            font-size: 0.65rem; 
+            font-weight: bold;
+        }
+        .check-item.ok { border-color: #238636; color: #39d353; background: rgba(35, 134, 54, 0.1); }
+        .check-item.pendencia { border-color: #f85149; color: #ff7b72; background: rgba(248, 81, 73, 0.1); }
+        
+        /* Layout Postos (Revertido para cards editáveis) */
+        .posto-item { border-left: 4px solid var(--accent); position: relative; }
+        .editable-field { background: #0d1117; padding: 8px; border-radius: 4px; border: 1px solid var(--border); margin: 5px 0; font-size: 0.8rem; min-height: 20px; color: #c9d1d9; }
+        .btn-row { display: flex; gap: 5px; margin-top: 10px; }
+        .btn-action { font-size: 0.7rem; padding: 6px; }
+        .delete-icon { position: absolute; top: 10px; right: 10px; color: #6e7681; cursor: pointer; }
+        
+        #preview-foto { width: 100%; border-radius: 4px; margin-top: 10px; display: none; border: 1px solid var(--border); }
+        
+        .ronda-entry { 
+            padding: 10px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #0d1117;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>FORTGUARD TÁTICO</h1>
+    <div class="status-dot"></div>
+</div>
+
+<div id="view-perfil" class="container">
+    <div class="card">
+        <h3>👤 IDENTIFICAÇÃO DO INSPETOR</h3>
+        <label>Nome Completo:</label> <input type="text" id="p-nome">
+        <label>Cargo:</label> <input type="text" id="p-cargo">
+        <label>Matrícula:</label> <input type="number" id="p-matrícula">
+        <label>Placa VTR:</label> <input type="text" id="p-placa" placeholder="ABC-1234">
+        <label>Empresa:</label> <input type="text" id="p-empresa">
+        <button class="btn btn-save" onclick="salvarPerfil()">GRAVAR DADOS</button>
+    </div>
+</div>
+
+<div id="view-rondas" class="container hidden">
+    <div class="card">
+        <h3>📋 REGISTRO OPERACIONAL</h3>
+        <div class="viatura-inputs">
+            <div><label>VTR:</label><input type="text" id="r-placa" readonly style="color:var(--accent)"></div>
+            <div><label>KM:</label><input type="number" id="r-km" placeholder="00000"></div>
+        </div>
+        <label>Posto Alvo:</label> <select id="r-posto"></select>
+        <label>Plantonista no Local:</label> <input type="text" id="r-func">
+        <label>Missão:</label> 
+        <select id="r-motivo" onchange="toggleFiscalizacao()">
+            <option value="Deslocamento">Deslocamento</option>
+            <option value="Fiscalização">Fiscalização</option>
+            <option value="Entrega de Material">Entrega de Material</option>
+            <option value="Ronda Noturna">Ronda Noturna</option>
+        </select>
+        <div id="sec-fiscalizacao" class="hidden">
+            <label>CHECKLIST TÁTICO:</label>
+            <div class="checklist-grid" id="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">APRESENTAÇÃO</div>
+                <div class="check-item" onclick="toggleCheck(this)">UNIFORME</div>
+                <div class="check-item" onclick="toggleCheck(this)">POSTURA</div>
+                <div class="check-item" onclick="toggleCheck(this)">LIVRO OCOR.</div>
+                <div class="check-item" onclick="toggleCheck(this)">MATERIAL</div>
+                <div class="check-item" onclick="toggleCheck(this)">OUTROS</div>
+            </div>
+        </div>
+        <label>Notas de Campo:</label> <textarea id="r-obs" rows="2"></textarea>
+        <label>Evidência Fotográfica:</label>
+        <input type="file" id="r-foto" accept="image/*" capture="camera" onchange="previewImage(this)">
+        <img id="preview-foto" src="#" alt="Preview">
+        <button class="btn btn-save" onclick="salvarRonda()">FINALIZAR REGISTRO</button>
+    </div>
+    <div class="card">
+        <h3>📊 LOG DE ATIVIDADES</h3>
+        <p style="font-size:0.7rem">TOTAL DE VISITAS: <span id="qtd-rondas" style="color:var(--accent)">0</span></p>
+        <button class="btn btn-pdf" onclick="gerarPdfPlantao()">EXPORTAR FECHAMENTO (PDF)</button>
+        <button class="btn btn-delete" onclick="zerarRondas()" style="font-size:0.7rem">RESETA PLANTÃO</button>
+        <hr>
+        <div id="historico-rondas"></div>
+    </div>
+</div>
+
+<div id="view-postos" class="container hidden">
+    <div class="card">
+        <h3>📍 BASE DE POSTOS</h3>
+        <input type="text" id="busca-posto" placeholder="Filtrar base..." onkeyup="renderPostos()">
+        <div id="lista-postos" style="margin-top: 15px;"></div>
+    </div>
+</div>
+
+<div id="view-config" class="container hidden">
+    <div class="card">
+        <h3>⚙️ TERMINAL ADMINISTRATIVO</h3>
+        <div id="lock-screen">
+            <label>PIN DE ACESSO:</label>
+            <input type="password" id="pin-input" maxlength="4">
+            <button class="btn btn-save" onclick="checkPin()">AUTENTICAR</button>
+        </div>
+        <div id="config-content" class="hidden">
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border: 1px solid var(--border);">
+                <strong style="color:var(--accent); font-size:0.7rem;">CADASTRO MANUAL</strong>
+                <label>Nome:</label><input type="text" id="adm-nome-posto">
+                <label>Endereço:</label><input type="text" id="adm-end-posto">
+                <label>Fone:</label><input type="text" id="adm-tel-posto">
+                <button class="btn btn-save" onclick="adicionarPostoManual()">ADICIONAR À BASE</button>
+            </div>
+            <button class="btn btn-delete" onclick="limparTodosPostos()" style="background:#333; margin-top:20px">APAGAR TODA A BASE</button>
+        </div>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active" id="nav-perfil" onclick="showView('perfil')"><div>👤</div>PERFIL</div>
+    <div class="nav-item" id="nav-rondas" onclick="showView('rondas')"><div>📋</div>RONDAS</div>
+    <div class="nav-item" id="nav-postos" onclick="showView('postos')"><div>📍</div>POSTOS</div>
+    <div class="nav-item" id="nav-config" onclick="showView('config')"><div>⚙️</div>ADMIN</div>
+</nav>
+
+<script>
+    const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "COND CASA 100", "COND MARIA VILAC", "COND SOLAR SEVILHA", "COND TREND NOVA CARLOS GOMES", "COND VINTAGE", "CONDOMINIO EDIFICIO FURRIEL", "CONDOMINIO SAINT MORITZ", "CONDOMÍNIO REBOUÇAS 180", "GERMANIA MALL", "INATIVO", "INATIVO (INSS)", "INSTITUTO RELIGIOSO BARBARA MAIX", "JOSAPAR (Menino Deus)", "JOSAPAR (TRAMANDAI)", "JOSAPAR (TORRES)", "JOSAPAR (TERESOPOLIS)", "JOSAPAR( CAPÃO DA CANOA )", "MedCenter", "PANVEL - 24 DE OUTUBRO", "PANVEL - ALVORADA", "PANVEL - ANITA GARIBALDI", "PANVEL - CASEMIRO DE ABREU", "PANVEL - MINI CD CAVALHADA", "PANVEL - MINI CD PROTÁSIO ALVES", "PANVEL - NILO PEÇANHA", "PANVEL - OSCAR PEREIRA", "PANVEL - PLÍNIO BRASIL MILANO", "PANVEL - TERESÓPOLIS", "PANVEL - VICENTE DA FONTOURA", "QUANTICA - RESERVA", "QUÂNTICA - ADMINISTRATIVO", "QUÂNTICA - OPERACIONAL", "SHOPPING JOÃO PESSOA", "VIVA OPEN MALL - MONITORAMENTO", "VIVA OPEN MALL - SEGURANÇA", "ZAFFARI - CABRAL", "ZAFFARI - CAVALHADA", "ZAFFARI - CESTTO GRAVATAI", "ZAFFARI - CESTTO PROTÁSIO", "ZAFFARI - CESTTO VIAMÃO", "ZAFFARI - CESTTO WENCESLAU ESCOBAR", "ZAFFARI - CRISTOVÃO COLOMBO", "ZAFFARI - FERNANDES VIEIRA", "ZAFFARI - IPANEMA", "ZAFFARI - LINDÓIA", "ZAFFARI - PROTÁSIO ALVES"];
+
+    let db = JSON.parse(localStorage.getItem('fortguard_ronda_db')) || { perfil: {}, postos: postosIniciais.map(n => ({nome:n, endereco:"", telefone:""})), rondas: [] };
+    let fotoBase64 = "";
+
+    function saveDB() { localStorage.setItem('fortguard_ronda_db', JSON.stringify(db)); }
+
+    function showView(view) {
+        document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('view-' + view).classList.remove('hidden');
+        document.getElementById('nav-' + view).classList.add('active');
+        if(view === 'rondas') {
+            document.getElementById('r-placa').value = db.perfil.placa || "N/A";
+            atualizarSelectPostos();
+            renderRondas();
+        }
+        if(view === 'postos') renderPostos();
+    }
+
+    function renderPostos() {
+        const lista = document.getElementById('lista-postos');
+        const busca = document.getElementById('busca-posto').value.toLowerCase();
+        lista.innerHTML = "";
+        db.postos.sort((a,b) => a.nome.localeCompare(b.nome)).forEach((p, index) => {
+            if(p.nome.toLowerCase().includes(busca)) {
+                lista.innerHTML += `
+                    <div class="card posto-item">
+                        <span class="delete-icon" onclick="excluirPosto(${index})">✕</span>
+                        <strong style="font-size:0.8rem">${p.nome}</strong>
+                        <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].endereco=this.innerText;saveDB()">${p.endereco || 'Toque para editar endereço'}</div>
+                        <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].telefone=this.innerText;saveDB()">${p.telefone || 'Toque para editar telefone'}</div>
+                        <div class="btn-row">
+                            <button class="btn btn-pdf btn-action" onclick="window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('${p.nome} ${p.endereco}'))">ROTA</button>
+                            <button class="btn btn-save btn-action" onclick="location.href='tel:${p.telefone}'">LIGAR</button>
+                        </div>
+                    </div>`;
+            }
+        });
+    }
+
+    function adicionarPostoManual() {
+        const nome = document.getElementById('adm-nome-posto').value.toUpperCase().trim();
+        if (!nome) return alert("ERRO: NOME OBRIGATÓRIO");
+        db.postos.push({ nome, endereco: document.getElementById('adm-end-posto').value, telefone: document.getElementById('adm-tel-posto').value });
+        saveDB();
+        document.getElementById('adm-nome-posto').value = "";
+        alert("BASE ATUALIZADA");
+        atualizarSelectPostos();
+    }
+
+    function atualizarSelectPostos() {
+        const select = document.getElementById('r-posto');
+        select.innerHTML = db.postos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('') || '<option value="">Sem postos</option>';
+    }
+
+    function excluirPosto(i) { if(confirm("REMOVER POSTO?")) { db.postos.splice(i, 1); saveDB(); renderPostos(); atualizarSelectPostos(); } }
+
+    function toggleCheck(e) {
+        if(!e.classList.contains('ok') && !e.classList.contains('pendencia')) e.classList.add('ok');
+        else if(e.classList.contains('ok')) { e.classList.remove('ok'); e.classList.add('pendencia'); }
+        else e.classList.remove('pendencia');
+    }
+
+    function toggleFiscalizacao() { 
+        document.getElementById('sec-fiscalizacao').classList.toggle('hidden', document.getElementById('r-motivo').value !== "Fiscalização"); 
+    }
+
+    function previewImage(i) {
+        const f = i.files[0];
+        const r = new FileReader();
+        r.onload = (e) => { 
+            fotoBase64 = e.target.result; 
+            document.getElementById('preview-foto').src = fotoBase64;
+            document.getElementById('preview-foto').style.display = "block";
+        };
+        r.readAsDataURL(f);
+    }
+
+    function salvarRonda() {
+        const km = document.getElementById('r-km').value;
+        const posto = document.getElementById('r-posto').value;
+        if(!km || !posto || !fotoBase64) return alert("DADOS INCOMPLETOS");
+        const novaRonda = {
+            data: new Date().toLocaleDateString(),
+            hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+            placa: db.perfil.placa || "",
+            km: km, posto: posto,
+            func: document.getElementById('r-func').value || "N/I",
+            motivo: document.getElementById('r-motivo').value,
+            obs: document.getElementById('r-obs').value || "S/O",
+            foto: fotoBase64,
+            checklist: Array.from(document.querySelectorAll('#checklist .check-item')).map(i => i.innerText + ": " + (i.classList.contains('ok') ? "OK" : i.classList.contains('pendencia') ? "PEND" : "N/A"))
+        };
+        db.rondas.push(novaRonda);
+        saveDB();
+        alert("REGISTRO SALVO");
+        resetFormRonda();
+        renderRondas();
+    }
+
+    function renderRondas() {
+        const container = document.getElementById('historico-rondas');
+        document.getElementById('qtd-rondas').innerText = db.rondas.length;
+        container.innerHTML = db.rondas.slice().reverse().map((r, i) => `
+            <div class="ronda-entry">
+                <div style="font-size:0.7rem"><strong>${r.hora}</strong> - ${r.posto}<br><small style="color:#8b949e">KM: ${r.km} | ${r.motivo}</small></div>
+                <button class="btn btn-pdf" style="width:auto; padding:4px 8px; margin:0; font-size:0.55rem" onclick="gerarPdfIndividual(${db.rondas.length-1-i})">PDF</button>
+            </div>`).join('');
+    }
+
+    function resetFormRonda() {
+        document.getElementById('r-km').value = ""; document.getElementById('r-func').value = "";
+        document.getElementById('r-obs').value = ""; document.getElementById('r-foto').value = "";
+        document.getElementById('preview-foto').style.display = "none"; fotoBase64 = "";
+        document.querySelectorAll('.check-item').forEach(i => i.classList.remove('ok', 'pendencia'));
+    }
+
+    function checkPin() { if(document.getElementById('pin-input').value === "455") { document.getElementById('lock-screen').classList.add('hidden'); document.getElementById('config-content').classList.remove('hidden'); } else { alert("ACESSO NEGADO"); } }
+
+    function salvarPerfil() {
+        db.perfil = {
+            nome: document.getElementById('p-nome').value, cargo: document.getElementById('p-cargo').value,
+            matricula: document.getElementById('p-matrícula').value, placa: document.getElementById('p-placa').value.toUpperCase(),
+            empresa: document.getElementById('p-empresa').value
+        };
+        saveDB(); alert("PERFIL ATUALIZADO");
+    }
+
+    function zerarRondas() { if(confirm("DESEJA RECOMEÇAR O LOG DO PLANTÃO?")) { db.rondas = []; saveDB(); renderRondas(); } }
+    function limparTodosPostos() { if(confirm("LIMPAR TODA A BASE DE POSTOS?")) { db.postos = []; saveDB(); renderPostos(); } }
+
+    function gerarPdfIndividual(idx) {
+        const r = db.rondas[idx];
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFont("helvetica", "bold"); doc.text("FORTGUARD - RELATÓRIO DE CAMPO", 10, 15);
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Posto: ${r.posto}`, 10, 25);
+        doc.text(`Data/Hora: ${r.data} ${r.hora} | VTR: ${r.placa} | KM: ${r.km}`, 10, 31);
+        doc.text(`Inspetor: ${db.perfil.nome}`, 10, 37);
+        doc.text(`Motivo: ${r.motivo} | Plantonista: ${r.func}`, 10, 43);
+        let y = 55; r.checklist.forEach(c => { doc.text("- " + c, 12, y); y += 6; });
+        if(r.foto) doc.addImage(r.foto, 'JPEG', 10, y + 5, 80, 60);
+        doc.save(`Ronda_${r.posto}.pdf`);
+    }
+
+    function gerarPdfPlantao() {
+        if(!db.rondas.length) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFont("helvetica", "bold"); doc.text("FECHAMENTO DE PLANTÃO OPERACIONAL", 10, 15);
+        let y = 30;
+        db.rondas.forEach((r, i) => {
+            doc.text(`${i+1}. ${r.hora} - ${r.posto} (KM: ${r.km}) - ${r.motivo}`, 10, y);
+            y += 8; if(y > 280) { doc.addPage(); y = 20; }
+        });
+        doc.save("Fechamento_Plantao.pdf");
+    }
+
+    window.onload = () => {
+        if(db.perfil) {
+            document.getElementById('p-nome').value = db.perfil.nome || "";
+            document.getElementById('p-cargo').value = db.perfil.cargo || "";
+            document.getElementById('p-matrícula').value = db.perfil.matricula || "";
+            document.getElementById('p-placa').value = db.perfil.placa || "";
+            document.getElementById('p-empresa').value = db.perfil.empresa || "";
+        }
+        renderRondas();
+    };
+</script>
+</body>
+</html>
