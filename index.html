@@ -382,15 +382,38 @@
         const r = db.rondas[idx];
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFont("helvetica", "bold"); doc.text("FORTGUARD - RELATÓRIO DE CAMPO", 10, 15);
-        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+    
+                const pageHeight = doc.internal.pageSize.height;
+
+        doc.setFont("helvetica", "bold"); 
+        doc.text("RELATÓRIO DE RONDA", 10, 15); // Alterado de FortGuard para Relatório de Ronda
+        
+        doc.setFontSize(10); 
+        doc.setFont("helvetica", "normal");
         doc.text(`Posto: ${r.posto}`, 10, 25);
         doc.text(`Data/Hora: ${r.data} ${r.hora} | VTR: ${r.placa} | KM: ${r.km}`, 10, 31);
-        doc.text(`Inspetor: ${db.perfil.nome}`, 10, 37);
-        doc.text(`Motivo: ${r.motivo} | Plantonista: ${r.func}`, 10, 43);
-        let y = 55; r.checklist.forEach(c => { doc.text("- " + c, 12, y); y += 6; });
+        
+        // Parte 2: Cargo registrado no app + Nome
+        doc.text(`Inspetor: ${db.perfil.cargo} - ${db.perfil.nome}`, 10, 37);
+        
+        // Parte 3: Mudança para Colaborador de plantão
+        doc.text(`Motivo: ${r.motivo} | Colaborador de plantão: ${r.func}`, 10, 43);
+        
+        let y = 55; 
+        r.checklist.forEach(c => { 
+            doc.text("- " + c, 12, y); 
+            y += 6; 
+        });
+
         if(r.foto) doc.addImage(r.foto, 'JPEG', 10, y + 5, 80, 60);
-        doc.save(`Ronda_${r.posto}.pdf`);
+
+        // Parte 4: Nome e CNPJ da empresa no final do PDF
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text("NOME DA SUA EMPRESA - CNPJ: 00.000.000/0001-00", 105, pageHeight - 10, { align: "center" });
+
+        doc.save(`Relatorio_Ronda_${r.posto}.pdf`);
+
     }
 
     function gerarPdfPlantao() {
