@@ -34,6 +34,7 @@
         .btn-save { background: var(--success); color: white; }
         .btn-delete { background: #484f58; color: white; }
         .btn-pdf { background: #1f6feb; color: white; }
+        .btn-report { background: #ffd600; color: #0a192f; margin-bottom: 10px; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); display: flex; border-top: 1px solid var(--accent); padding: 8px 0; z-index: 100; }
         .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
         .nav-item.active { color: var(--accent); }
@@ -110,6 +111,8 @@
     <div class="card">
         <h3>📊 LOG DE ATIVIDADES</h3>
         <p style="font-size:0.7rem">TOTAL DE VISITAS: <span id="qtd-rondas" style="color:var(--accent)">0</span></p>
+        <button class="btn btn-report" onclick="gerarRelatorioGeral()">📋 GERAR RELATÓRIO GERAL (PDF)</button>
+        <button class="btn btn-delete" onclick="zerarRondas()" style="font-size:0.7rem; background:#222; border: 1px solid var(--border)">ENCERRAR PLANTÃO (ZERAR)</button>
         <hr>
         <div id="historico-rondas"></div>
     </div>
@@ -136,6 +139,7 @@
                 <strong style="color:var(--accent); font-size:0.7rem;">CADASTRO MANUAL</strong>
                 <label>Nome:</label><input type="text" id="adm-nome-posto">
                 <label>Endereço:</label><input type="text" id="adm-end-posto">
+                <label>Telefone:</label><input type="text" id="adm-tel-posto">
                 <button class="btn btn-save" onclick="adicionarPostoManual()">ADICIONAR À BASE</button>
             </div>
             <button class="btn btn-delete" onclick="limparTodosPostos()" style="background:#333; margin-top:20px">APAGAR TODA A BASE</button>
@@ -153,7 +157,7 @@
 <script>
     const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "COND CASA 100", "COND MARIA VILAC", "COND SOLAR SEVILHA", "COND TREND NOVA CARLOS GOMES", "COND VINTAGE", "CONDOMINIO EDIFICIO FURRIEL", "CONDOMINIO SAINT MORITZ", "CONDOMÍNIO REBOUÇAS 180", "GERMANIA MALL", "INATIVO", "INATIVO (INSS)", "INSTITUTO RELIGIOSO BARBARA MAIX", "JOSAPAR (Menino Deus)", "JOSAPAR (TRAMANDAI)", "JOSAPAR (TORRES)", "JOSAPAR (TERESOPOLIS)", "JOSAPAR( CAPÃO DA CANOA )", "MedCenter", "PANVEL - 24 DE OUTUBRO", "PANVEL - ALVORADA", "PANVEL - ANITA GARIBALDI", "PANVEL - CASEMIRO DE ABREU", "PANVEL - MINI CD CAVALHADA", "PANVEL - MINI CD PROTÁSIO ALVES", "PANVEL - NILO PEÇANHA", "PANVEL - OSCAR PEREIRA", "PANVEL - PLÍNIO BRASIL MILANO", "PANVEL - TERESÓPOLIS", "PANVEL - VICENTE DA FONTOURA", "QUANTICA - RESERVA", "QUÂNTICA - ADMINISTRATIVO", "QUÂNTICA - OPERACIONAL", "SHOPPING JOÃO PESSOA", "VIVA OPEN MALL - MONITORAMENTO", "VIVA OPEN MALL - SEGURANÇA", "ZAFFARI - CABRAL", "ZAFFARI - CAVALHADA", "ZAFFARI - CESTTO GRAVATAI", "ZAFFARI - CESTTO PROTÁSIO", "ZAFFARI - CESTTO VIAMÃO", "ZAFFARI - CESTTO WENCESLAU ESCOBAR", "ZAFFARI - CRISTOVÃO COLOMBO", "ZAFFARI - FERNANDES VIEIRA", "ZAFFARI - IPANEMA", "ZAFFARI - LINDÓIA", "ZAFFARI - PROTÁSIO ALVES"];
 
-    let db = JSON.parse(localStorage.getItem('fortguard_ronda_db')) || { perfil: {}, postos: postosIniciais.map(n => ({nome:n, endereco:""})), rondas: [] };
+    let db = JSON.parse(localStorage.getItem('fortguard_ronda_db')) || { perfil: {}, postos: postosIniciais.map(n => ({nome:n, endereco:"", telefone:""})), rondas: [] };
     let fotoBase64 = "";
 
     function saveDB() { localStorage.setItem('fortguard_ronda_db', JSON.stringify(db)); }
@@ -187,7 +191,8 @@
                 <div class="card posto-item">
                     <span class="delete-icon" onclick="excluirPosto(${index})">✕</span>
                     <strong style="font-size:0.8rem">${p.nome}</strong>
-                    <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].endereco=this.innerText;saveDB()">${p.endereco || 'Toque para editar endereço'}</div>
+                    <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].endereco=this.innerText;saveDB()">${p.endereco || 'Endereço não informado'}</div>
+                    <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].telefone=this.innerText;saveDB()">${p.telefone || 'Telefone não informado'}</div>
                 </div>`;
         });
     }
@@ -195,14 +200,20 @@
     function adicionarPostoManual() {
         const nome = document.getElementById('adm-nome-posto').value;
         if(!nome) return;
-        db.postos.push({nome: nome, endereco: document.getElementById('adm-end-posto').value});
+        db.postos.push({
+            nome: nome, 
+            endereco: document.getElementById('adm-end-posto').value,
+            telefone: document.getElementById('adm-tel-posto').value
+        });
         saveDB(); renderPostos();
         document.getElementById('adm-nome-posto').value = "";
         document.getElementById('adm-end-posto').value = "";
+        document.getElementById('adm-tel-posto').value = "";
     }
 
     function excluirPosto(idx) { if(confirm("Excluir posto?")) { db.postos.splice(idx, 1); saveDB(); renderPostos(); } }
     function limparTodosPostos() { if(confirm("APAGAR TUDO?")) { db.postos = []; saveDB(); renderPostos(); } }
+    function zerarRondas() { if(confirm("DESEJA ENCERRAR O PLANTÃO E ZERAR AS RONDAS?")) { db.rondas = []; saveDB(); renderRondas(); } }
 
     function atualizarSelectPostos() {
         document.getElementById('r-posto').innerHTML = db.postos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
@@ -272,6 +283,45 @@
                 <div style="font-size:0.7rem"><strong>${r.hora}</strong> - ${r.posto}</div>
                 <button class="btn btn-pdf" style="width:auto; padding:5px 10px; margin:0" onclick="gerarCardDigital(${db.rondas.length-1-i})">CARD</button>
             </div>`).join('');
+    }
+
+    // --- RELATÓRIO GERAL DO PLANTÃO ---
+    function gerarRelatorioGeral() {
+        if(db.rondas.length === 0) return alert("Sem dados para gerar relatório.");
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 15;
+
+        // Cabeçalho PDF Geral
+        doc.setFontSize(16); doc.setFont("helvetica", "bold");
+        doc.text("RELATÓRIO DE FECHAMENTO DE PLANTÃO", 105, y, { align: "center" });
+        y += 10;
+        
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Empresa: ${db.perfil.empresa || 'N/A'} | Supervisor: ${db.perfil.nome || 'N/A'}`, 10, y);
+        y += 5;
+        doc.text(`Data do Fechamento: ${new Date().toLocaleDateString()} | Total de Rondas: ${db.rondas.length}`, 10, y);
+        y += 10;
+
+        // Tabela de Rondas
+        doc.setFont("helvetica", "bold");
+        doc.text("HORA", 10, y); doc.text("POSTO ALVO", 25, y); doc.text("COLABORADOR", 100, y); doc.text("KM", 160, y); doc.text("VTR", 185, y);
+        y += 2;
+        doc.line(10, y, 200, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        db.rondas.forEach(r => {
+            if(y > 280) { doc.addPage(); y = 20; }
+            doc.text(r.hora, 10, y);
+            doc.text(r.posto.substring(0, 35), 25, y);
+            doc.text(r.func.substring(0, 25), 100, y);
+            doc.text(r.km, 160, y);
+            doc.text(r.placa, 185, y);
+            y += 8;
+        });
+
+        doc.save(`Fechamento_Plantao_${new Date().toLocaleDateString()}.pdf`);
     }
 
     async function gerarCardDigital(idx) {
