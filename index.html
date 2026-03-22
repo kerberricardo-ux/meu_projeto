@@ -50,6 +50,19 @@
         #preview-foto { width: 100%; border-radius: 4px; margin-top: 10px; display: none; border: 1px solid var(--border); }
         .ronda-entry { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0d1117; margin-bottom: 5px; border-radius: 4px; }
         #qrcode-container { display: none; }
+        
+        /* Novo estilo para o botão de rota */
+        .btn-route { 
+            background: #4285F4; 
+            color: white; 
+            padding: 5px 10px; 
+            font-size: 0.65rem; 
+            width: auto; 
+            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -191,8 +204,23 @@
                     <strong style="font-size:0.8rem">${p.nome}</strong>
                     <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].endereco=this.innerText;saveDB()">${p.endereco || 'Toque para inserir endereço'}</div>
                     <div class="editable-field" contenteditable="true" onblur="db.postos[${index}].telefone=this.innerText;saveDB()">${p.telefone || 'Toque para inserir telefone'}</div>
+                    <button class="btn btn-route" onclick="abrirRota(${index})">📍 MAPA E ROTA</button>
                 </div>`;
         });
+    }
+
+    // NOVA FUNÇÃO: ABRIR GOOGLE MAPS
+    function abrirRota(index) {
+        const posto = db.postos[index];
+        const endereco = posto.endereco;
+        if(!endereco || endereco === 'Toque para inserir endereço') {
+            alert("Por favor, insira o endereço primeiro.");
+            return;
+        }
+        // Limpa o endereço e formata para URL
+        const query = encodeURIComponent(endereco);
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+        window.open(url, '_blank');
     }
 
     function adicionarPostoManual() {
