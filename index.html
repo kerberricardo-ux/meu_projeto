@@ -292,7 +292,6 @@
         const doc = new jsPDF();
         let y = 15;
 
-        // Cabeçalho PDF Geral
         doc.setFontSize(16); doc.setFont("helvetica", "bold");
         doc.text("RELATÓRIO DE FECHAMENTO DE PLANTÃO", 105, y, { align: "center" });
         y += 10;
@@ -303,7 +302,6 @@
         doc.text(`Data do Fechamento: ${new Date().toLocaleDateString()} | Total de Rondas: ${db.rondas.length}`, 10, y);
         y += 10;
 
-        // Tabela de Rondas
         doc.setFont("helvetica", "bold");
         doc.text("HORA", 10, y); doc.text("POSTO ALVO", 25, y); doc.text("COLABORADOR", 100, y); doc.text("KM", 160, y); doc.text("VTR", 185, y);
         y += 2;
@@ -324,29 +322,55 @@
         doc.save(`Fechamento_Plantao_${new Date().toLocaleDateString()}.pdf`);
     }
 
+    // --- CORREÇÃO DO CARD DIGITAL ---
     async function gerarCardDigital(idx) {
         const r = db.rondas[idx];
+        if (!r) return alert("Erro ao localizar dados da ronda.");
+
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: "mm", format: [100, 160] });
+
+        // Estilo do Card
         doc.setFillColor(10, 25, 47); doc.rect(0, 0, 100, 160, 'F');
         doc.setFillColor(255, 214, 0); doc.rect(0, 0, 100, 15, 'F');
         doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(10, 25, 47);
         doc.text("COMPROVANTE DE RONDA", 50, 10, { align: "center" });
-        if(r.foto) { doc.setDrawColor(48, 54, 61); doc.rect(9, 19, 82, 62); doc.addImage(r.foto, 'JPEG', 10, 20, 80, 60); }
+
+        // Foto da Ronda
+        if(r.foto) { 
+            try {
+                doc.setDrawColor(48, 54, 61); doc.rect(9, 19, 82, 62); 
+                doc.addImage(r.foto, 'JPEG', 10, 20, 80, 60); 
+            } catch(e) { console.error("Erro na imagem", e); }
+        }
+
+        // Informações Principais
         doc.setTextColor(255, 214, 0); doc.setFontSize(14); doc.text(r.posto.toUpperCase(), 50, 90, { align: "center" });
         doc.setTextColor(230, 237, 243); doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`Data: ${r.data} | Hora: ${r.hora}`, 10, 98); doc.text(`VTR: ${r.placa} | KM: ${r.km}`, 10, 104);
+        
         doc.setFont("helvetica", "bold"); doc.text("STATUS OPERACIONAL:", 10, 115);
         doc.setFontSize(8); doc.setFont("helvetica", "normal");
-        r.checklist.forEach((c, i) => { doc.text(`• ${c}`, 10, 122 + (i * 5)); });
-        const qrContainer = document.getElementById("qrcode-container"); qrContainer.innerHTML = "";
-        new QRCode(qrContainer, { text: `VALIDO: ${r.posto} | ${r.data}`, width: 100, height: 100 });
-        await new Promise(res => setTimeout(res, 300));
-        const qrImg = qrContainer.querySelector("canvas").toDataURL("image/png");
-        doc.addImage(qrImg, 'PNG', 75, 125, 20, 20);
+        r.checklist.forEach((c, i) => { if(i < 5) doc.text(`• ${c}`, 10, 122 + (i * 5)); });
+
+        // Geração do QR Code Dinâmico
+        const qrContainer = document.getElementById("qrcode-container");
+        qrContainer.innerHTML = "";
+        new QRCode(qrContainer, { text: `VALIDO: ${r.posto} | ${r.data}`, width: 128, height: 128 });
+
+        // Espera renderização do Canvas para capturar imagem
+        await new Promise(res => setTimeout(res, 500));
+        const canvas = qrContainer.querySelector("canvas");
+        
+        if(canvas) {
+            const qrImg = canvas.toDataURL("image/png");
+            doc.addImage(qrImg, 'PNG', 75, 125, 20, 20);
+        }
+
         doc.setTextColor(139, 148, 158); doc.text("SUPERVISOR:", 10, 150);
         doc.setTextColor(255, 255, 255); doc.text(db.perfil.nome || "FISCAL", 10, 154);
-        doc.save(`Card_${r.posto}.pdf`);
+        
+        doc.save(`Card_${r.posto.replace(/\s+/g, '_')}.pdf`);
     }
 
     window.onload = () => {
