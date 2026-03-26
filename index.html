@@ -6,7 +6,6 @@
     <title>SENTINELA OPS</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         :root {
@@ -26,7 +25,7 @@
             margin: 0; 
             background: var(--bg); 
             color: var(--text); 
-            padding-bottom: 75px;
+            padding-bottom: 85px;
             line-height: 1.4;
         }
 
@@ -41,14 +40,8 @@
             position: sticky; 
             top: 0; 
             z-index: 1000;
-            font-weight: bold;
         }
-        .header h1 { 
-            margin: 0; 
-            font-size: 1.15rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px;
-        }
+        .header h1 { margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1.5px; }
 
         .container { padding: 12px; max-width: 640px; margin: 0 auto; }
 
@@ -65,91 +58,81 @@
             padding-bottom: 10px;
             border-bottom: 3px solid var(--accent);
             color: var(--accent);
-            font-size: 0.98rem;
+            font-size: 0.95rem;
             text-transform: uppercase;
-            font-weight: 700;
         }
 
         label {
             display: block;
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #94a3b8;
-            margin: 14px 0 5px 0;
+            margin: 12px 0 5px 0;
             text-transform: uppercase;
         }
 
         input, select, textarea {
             width: 100%;
-            padding: 13px 14px;
+            padding: 12px;
             background: #1e2a44;
             border: 1px solid #475569;
             border-radius: 6px;
             color: white;
             font-size: 1rem;
+            margin-bottom: 10px;
         }
 
         .btn {
-            padding: 14px;
+            width: 100%;
+            padding: 15px;
             border: none;
             border-radius: 6px;
             font-weight: 700;
-            font-size: 0.95rem;
             text-transform: uppercase;
             cursor: pointer;
-            margin-top: 8px;
+            margin-top: 5px;
         }
 
-        .btn-primary { background: var(--accent); color: #0a192f; width: 100%; }
+        .btn-primary { background: var(--accent); color: #0a192f; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-small { padding: 10px 14px; font-size: 0.85rem; width: auto; }
+        .btn-info { background: #2563eb; color: white; }
+        .btn-small { padding: 8px 12px; font-size: 0.8rem; width: auto; margin: 0; }
 
-        .posto-item {
+        .menu-item {
             background: var(--card);
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 12px;
             display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-icon { font-size: 1.8rem; width: 50px; height: 50px; background: #1e2a44; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+        .posto-item {
+            background: #1e2a44;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            border-left: 4px solid var(--accent);
         }
 
-        .posto-nome {
-            font-weight: 600;
-            font-size: 1.02rem;
-            flex: 1;
-            word-break: break-word;
-        }
-
-        .viatura-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
-
+        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .check-item {
             background: #1e2a44;
             border: 2px solid #475569;
-            padding: 13px 10px;
+            padding: 10px;
             border-radius: 6px;
             text-align: center;
-            font-size: 0.79rem;
-            font-weight: 600;
-            cursor: pointer;
+            font-size: 0.8rem;
         }
-
-        .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.2); }
-        .check-item.pendencia { border-color: var(--danger); color: var(--danger); background: rgba(248, 81, 73, 0.2); }
-
-        .ronda-entry {
-            background: #1e2a44;
-            padding: 13px;
-            border-radius: 6px;
-            margin-bottom: 9px;
-            border-left: 5px solid #64748b;
-            font-size: 0.87rem;
-        }
-
-        .entry-break { border-left-color: #3b82f6; background: #1e3a5f; }
+        .check-item.ok { border-color: var(--success); color: var(--success); }
+        .check-item.pendencia { border-color: var(--danger); color: var(--danger); }
 
         .nav-bar {
             position: fixed;
@@ -160,18 +143,9 @@
             z-index: 1000;
         }
 
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px 6px;
-            color: #94a3b8;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
+        .nav-item { flex: 1; text-align: center; padding: 12px 5px; color: #94a3b8; font-size: 0.65rem; font-weight: 700; }
         .nav-item.active { color: var(--accent); }
-        .nav-item div { font-size: 1.45rem; margin-bottom: 3px; }
+        .nav-item div { font-size: 1.3rem; margin-bottom: 2px; }
 
         .hidden { display: none !important; }
     </style>
@@ -180,109 +154,87 @@
 
 <div class="header">
     <h1 id="main-title">SENTINELA OPS</h1>
-    <div style="font-size:1.5rem;">🛡️</div>
+    <div style="font-size:1.3rem;">🛡️</div>
 </div>
 
 <div id="view-home" class="container">
     <div class="menu-item" onclick="showView('rondas')">
         <div class="menu-icon">📍</div>
-        <div class="menu-text"><b>REGISTRO DE RONDAS</b><span>Atividades operacionais</span></div>
+        <div><b>REGISTRO DE RONDAS</b><br><small>Atividades táticas</small></div>
     </div>
     <div class="menu-item" onclick="showView('postos')">
         <div class="menu-icon">📋</div>
-        <div class="menu-text"><b>BASE DE POSTOS</b><span>Consulta e gerenciamento</span></div>
-    </div>
-    <div class="menu-item" onclick="gerarRelatorioPlantao()">
-        <div class="menu-icon">📄</div>
-        <div class="menu-text"><b>RELATÓRIO DE PLANTÃO</b><span>Gerar PDF completo</span></div>
+        <div><b>BASE DE POSTOS</b><br><small>Gerenciar locais</small></div>
     </div>
     <div class="menu-item" onclick="showView('perfil')">
         <div class="menu-icon">👤</div>
-        <div class="menu-text"><b>MEU PERFIL</b><span>Dados do colaborador</span></div>
+        <div><b>MEU PERFIL</b><br><small>Dados cadastrais</small></div>
     </div>
 </div>
 
 <div id="view-rondas" class="container hidden">
     <div class="card">
-        <h3>REGISTRO OPERACIONAL</h3>
-        <button id="btn-intervalo" class="btn btn-info" onclick="gerenciarIntervalo()">☕ INICIAR INTERVALO / JANTA</button>
-
-        <div class="viatura-grid" style="margin-top:18px;">
-            <div><label>Viatura (Placa)</label><input type="text" id="r-placa" readonly></div>
-            <div><label>KM Atual</label><input type="number" id="r-km" placeholder="000000"></div>
-        </div>
+        <h3>NOVA ATIVIDADE</h3>
+        <button id="btn-intervalo" class="btn btn-info" onclick="gerenciarIntervalo()">☕ INICIAR INTERVALO</button>
+        
+        <label>KM Atual</label>
+        <input type="number" id="r-km" placeholder="Ex: 12540">
 
         <label>Posto / Local</label>
-        <input type="text" id="r-posto" placeholder="Digite o nome do posto ou local">
+        <input type="text" id="r-posto" list="lista-sugestao-postos" placeholder="Selecione ou digite o posto">
+        <datalist id="lista-sugestao-postos"></datalist>
 
-        <label>Colaborador</label>
-        <input type="text" id="r-func" readonly>
-
-        <label>Missão / Tipo</label>
+        <label>Tipo de Atividade</label>
         <select id="r-motivo" onchange="toggleFiscalizacao()">
             <option value="Fiscalização">Fiscalização</option>
             <option value="Deslocamento">Deslocamento</option>
-            <option value="Entrega de Material">Entrega de Material</option>
-            <option value="Outros">Outros</option>
+            <option value="Apoio">Apoio</option>
         </select>
 
         <div id="sec-fiscalizacao">
-            <label>CHECKLIST TÁTICO</label>
+            <label>Checklist</label>
             <div class="checklist-grid" id="checklist">
-                <div class="check-item ok" onclick="toggleCheck(this)">APRESENTAÇÃO</div>
                 <div class="check-item ok" onclick="toggleCheck(this)">UNIFORME</div>
                 <div class="check-item ok" onclick="toggleCheck(this)">POSTURA</div>
-                <div class="check-item ok" onclick="toggleCheck(this)">LIVRO DE OCORRÊNCIA</div>
+                <div class="check-item ok" onclick="toggleCheck(this)">LIVRO</div>
                 <div class="check-item ok" onclick="toggleCheck(this)">MATERIAL</div>
-                <div class="check-item ok" onclick="toggleCheck(this)">OUTROS</div>
             </div>
         </div>
 
         <label>Observações</label>
-        <textarea id="r-obs" rows="3" placeholder="Descreva qualquer ocorrência..."></textarea>
+        <textarea id="r-obs" rows="2"></textarea>
 
-        <label>Foto (Opcional)</label>
-        <input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
-
-        <button class="btn btn-primary" onclick="salvarRonda()" style="margin-top:22px;">✅ FINALIZAR E GERAR CARD</button>
-        <button class="btn btn-danger" onclick="zerarPlantao()" style="margin-top:12px;">🗑️ ZERAR PLANTÃO</button>
+        <button class="btn btn-primary" onclick="salvarRonda()">✅ SALVAR REGISTRO</button>
     </div>
 
     <div class="card">
-        <h3>LOG DE ATIVIDADES</h3>
-        <div id="historico-rondas" style="max-height: 420px; overflow-y: auto;"></div>
-    </div>
-</div>
-
-<div id="view-perfil" class="container hidden">
-    <div class="card">
-        <h3>MEU PERFIL OPERACIONAL</h3>
-        <label>Nome Completo</label><input type="text" id="p-nome">
-        <label>Matrícula</label><input type="number" id="p-matrícula">
-        <label>Placa da Viatura</label><input type="text" id="p-placa" placeholder="ABC-1234">
-        <label>Cargo</label><input type="text" id="p-cargo" placeholder="Vigilante / Supervisor">
-        <label>Empresa</label><input type="text" id="p-empresa">
-        <label>CNPJ</label><input type="text" id="p-cnpj">
-        <button class="btn btn-primary" onclick="salvarPerfil()">SALVAR PERFIL</button>
+        <h3>LOG RECENTE</h3>
+        <div id="historico-rondas"></div>
+        <button class="btn btn-danger" onclick="zerarPlantao()" style="margin-top:15px; font-size: 0.8rem; padding: 10px;">🗑️ LIMPAR TUDO</button>
     </div>
 </div>
 
 <div id="view-postos" class="container hidden">
     <div class="card">
-        <h3>BASE DE POSTOS</h3>
-        
-        <!-- Adicionar novo posto -->
-        <label>Novo Posto</label>
-        <input type="text" id="novo-posto-nome" placeholder="Nome do novo posto">
-        <button class="btn btn-primary" onclick="adicionarPosto()">➕ ADICIONAR POSTO</button>
+        <h3>ADICIONAR POSTO</h3>
+        <input type="text" id="novo-posto-nome" placeholder="Nome do Posto">
+        <button class="btn btn-primary" onclick="adicionarPosto()">➕ CADASTRAR NOVO</button>
+    </div>
 
-        <hr style="border:1px solid #334155; margin:20px 0;">
-
-        <!-- Busca -->
-        <input type="text" id="busca-posto" placeholder="Pesquisar posto..." onkeyup="renderPostos()" style="margin-bottom:16px; padding:14px;">
-
-        <!-- Lista -->
+    <div class="card">
+        <h3>PESQUISAR POSTOS</h3>
+        <input type="text" id="busca-posto" placeholder="Filtrar por nome..." onkeyup="renderPostos()">
         <div id="lista-postos"></div>
+    </div>
+</div>
+
+<div id="view-perfil" class="container hidden">
+    <div class="card">
+        <h3>DADOS DO COLABORADOR</h3>
+        <label>Nome</label><input type="text" id="p-nome">
+        <label>Placa</label><input type="text" id="p-placa">
+        <label>Matrícula</label><input type="text" id="p-mat">
+        <button class="btn btn-primary" onclick="salvarPerfil()">SALVAR PERFIL</button>
     </div>
 </div>
 
@@ -294,168 +246,112 @@
 </nav>
 
 <script>
-    const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"];
+    const iniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA"];
     
     let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { 
         perfil: {}, 
-        postos: postosIniciais.map(n => ({nome: n, endereco: ""})), 
+        postos: iniciais.map(n => ({nome: n})), 
         rondas: [], 
         intervaloAtivo: null 
     };
 
-    let fotoBase64 = "";
-
-    function saveDB() { 
-        localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); 
-    }
+    function saveDB() { localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); }
 
     function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
-        const target = document.getElementById('view-' + view);
-        if (target) target.classList.remove('hidden');
-
+        document.getElementById('view-' + view).classList.remove('hidden');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        const nav = document.getElementById('nav-' + view);
-        if (nav) nav.classList.add('active');
-
-        const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
-        document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
-
-        if (view === 'rondas') {
-            document.getElementById('r-placa').value = db.perfil.placa || "";
-            document.getElementById('r-func').value = db.perfil.nome || "";
+        document.getElementById('nav-' + view).classList.add('active');
+        
+        if(view === 'postos') renderPostos();
+        if(view === 'rondas') {
             renderRondas();
+            atualizarSugestoes();
             atualizarBotaoIntervalo();
         }
-        if (view === 'perfil') {
-            document.getElementById('p-nome').value = db.perfil.nome || '';
-            document.getElementById('p-matrícula').value = db.perfil.matricula || '';
-            document.getElementById('p-placa').value = db.perfil.placa || '';
-            document.getElementById('p-cargo').value = db.perfil.cargo || '';
-            document.getElementById('p-empresa').value = db.perfil.empresa || '';
-            document.getElementById('p-cnpj').value = db.perfil.cnpj || '';
-        }
-        if (view === 'postos') {
-            document.getElementById('novo-posto-nome').value = '';
-            renderPostos();
-        }
+        if(view === 'perfil') carregarPerfil();
     }
 
-    // ====================== FUNÇÕES DE POSTOS ======================
+    // --- LOGICA DE POSTOS ---
     function adicionarPosto() {
-        const nome = document.getElementById('novo-posto-nome').value.trim();
-        if (!nome) {
-            alert("❌ Digite o nome do posto.");
-            return;
-        }
-        if (db.postos.some(p => p.nome.toLowerCase() === nome.toLowerCase())) {
-            alert("⚠️ Este posto já existe.");
-            return;
-        }
-
-        db.postos.push({ nome: nome, endereco: "" });
+        const nome = document.getElementById('novo-posto-nome').value.trim().toUpperCase();
+        if (!nome) return alert("Digite o nome!");
+        if (db.postos.some(p => p.nome === nome)) return alert("Já existe!");
+        
+        db.postos.push({ nome: nome });
         saveDB();
-        renderPostos();
         document.getElementById('novo-posto-nome').value = '';
-        alert("✅ Posto adicionado com sucesso!");
+        renderPostos();
+        alert("✅ Posto adicionado!");
     }
 
-    function excluirPosto(index) {
-        if (confirm("Tem certeza que deseja excluir este posto?\nEsta ação não pode ser desfeita.")) {
-            db.postos.splice(index, 1);
+    function excluirPosto(idx) {
+        if(confirm("Excluir este posto permanentemente?")) {
+            db.postos.splice(idx, 1);
             saveDB();
             renderPostos();
         }
     }
 
     function renderPostos() {
-        const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
+        const busca = document.getElementById('busca-posto').value.toLowerCase();
         const lista = document.getElementById('lista-postos');
-        
         const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
 
         lista.innerHTML = filtrados.map((p, i) => `
             <div class="posto-item">
-                <div class="posto-nome">${p.nome}</div>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.nome)}','_blank')" 
-                            style="background:#334155; color:white; border:none; padding:10px 14px; border-radius:6px; font-size:0.85rem;">
-                        MAPA
-                    </button>
-                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">EXCLUIR</button>
+                <div style="font-weight:bold;">${p.nome}</div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-small" style="background:#334155; color:white;" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.nome)}')">📍</button>
+                    <button class="btn-small btn-danger" onclick="excluirPosto(${db.postos.indexOf(p)})">🗑️</button>
                 </div>
             </div>
         `).join('');
-
-        if (filtrados.length === 0) {
-            lista.innerHTML = `<p style="text-align:center; color:#888; padding:40px 20px;">Nenhum posto encontrado.</p>`;
-        }
     }
 
-    // ====================== OUTRAS FUNÇÕES ======================
-    async function salvarRonda() {
-        const checklistStatus = {};
-        document.querySelectorAll('#checklist .check-item').forEach(item => {
-            checklistStatus[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
-        });
+    function atualizarSugestoes() {
+        const dl = document.getElementById('lista-sugestao-postos');
+        dl.innerHTML = db.postos.map(p => `<option value="${p.nome}">`).join('');
+    }
 
-        const ronda = {
+    // --- LOGICA DE RONDAS ---
+    function salvarRonda() {
+        const posto = document.getElementById('r-posto').value.toUpperCase();
+        if(!posto) return alert("Informe o posto!");
+
+        const novaRonda = {
             id: Date.now(),
-            posto: document.getElementById('r-posto').value.trim() || "SEM POSTO",
-            motivo: document.getElementById('r-motivo').value,
-            km: document.getElementById('r-km').value || '—',
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-            obs: document.getElementById('r-obs').value || 'N/A',
-            checklist: checklistStatus,
-            isIntervalo: false
+            posto: posto,
+            hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            km: document.getElementById('r-km').value || "---",
+            motivo: document.getElementById('r-motivo').value
         };
-        
-        db.rondas.push(ronda);
+
+        db.rondas.push(novaRonda);
         saveDB();
         renderRondas();
-        gerarPDF(ronda);
-
-        // Limpar formulário
+        alert("✅ Ronda registrada!");
         document.getElementById('r-km').value = '';
-        document.getElementById('r-obs').value = '';
         document.getElementById('r-posto').value = '';
-        document.getElementById('r-motivo').value = 'Fiscalização';
-        toggleFiscalizacao();
-        document.querySelectorAll('#checklist .check-item').forEach(item => item.classList.add('ok'));
     }
 
-    function gerarRelatorioPlantao() {
-        if (!db.perfil.nome || db.rondas.length === 0) {
-            alert("⚠️ Cadastre seu perfil e registre pelo menos uma ronda.");
-            return;
-        }
-        alert("✅ Relatório gerado (implementação completa disponível se precisar)");
-    }
-
-    function zerarPlantao() {
-        if (confirm("Tem certeza que deseja ZERAR todo o plantão?")) {
-            db.rondas = [];
-            db.intervaloAtivo = null;
-            saveDB();
-            renderRondas();
-            atualizarBotaoIntervalo();
-            alert("Plantão zerado!");
-        }
+    function renderRondas() {
+        const log = document.getElementById('historico-rondas');
+        log.innerHTML = db.rondas.slice().reverse().map(r => `
+            <div style="padding:10px; border-bottom:1px solid #334155; font-size:0.9rem;">
+                <span style="color:var(--accent)">${r.hora}</span> | <b>${r.posto}</b><br>
+                <small>${r.motivo} - KM: ${r.km}</small>
+            </div>
+        `).join('');
     }
 
     function gerenciarIntervalo() {
-        const agora = new Date();
         if (!db.intervaloAtivo) {
-            db.intervaloAtivo = agora.getTime();
-            alert("✅ Intervalo iniciado!");
+            db.intervaloAtivo = Date.now();
+            alert("☕ Intervalo iniciado!");
         } else {
-            const inicio = new Date(db.intervaloAtivo);
-            const diffMin = Math.round((agora - inicio) / 60000);
-            db.rondas.push({ 
-                id: Date.now(), isIntervalo: true, posto: "☕ INTERVALO / JANTA", 
-                duracao: diffMin, hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-            });
+            const min = Math.round((Date.now() - db.intervaloAtivo) / 60000);
+            db.rondas.push({ posto: "☕ INTERVALO", hora: "FIM", motivo: `Duração: ${min} min`, km: "---" });
             db.intervaloAtivo = null;
             alert("✅ Intervalo finalizado!");
         }
@@ -467,57 +363,47 @@
     function atualizarBotaoIntervalo() {
         const btn = document.getElementById('btn-intervalo');
         if (db.intervaloAtivo) {
-            btn.innerText = "🛑 FINALIZAR INTERVALO";
-            btn.style.background = '#f85149';
+            btn.innerText = "🛑 ENCERRAR INTERVALO";
+            btn.classList.replace('btn-info', 'btn-danger');
         } else {
-            btn.innerText = "☕ INICIAR INTERVALO / JANTA";
-            btn.style.background = '#2563eb';
+            btn.innerText = "☕ INICIAR INTERVALO";
+            btn.classList.replace('btn-danger', 'btn-info');
         }
     }
 
-    function renderRondas() {
-        const log = document.getElementById('historico-rondas');
-        log.innerHTML = db.rondas.slice().reverse().map(r => `
-            <div class="ronda-entry ${r.isIntervalo ? 'entry-break' : ''}">
-                <strong>${r.hora}</strong> — ${r.posto} ${r.duracao ? '('+r.duracao+'min)' : ''}
-            </div>
-        `).join('');
+    function toggleCheck(el) {
+        el.classList.toggle('ok');
+        el.classList.toggle('pendencia');
     }
 
     function toggleFiscalizacao() {
-        const motivo = document.getElementById('r-motivo').value;
-        document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
+        const m = document.getElementById('r-motivo').value;
+        document.getElementById('sec-fiscalizacao').style.display = (m === 'Fiscalização') ? 'block' : 'none';
     }
 
-    function toggleCheck(item) {
-        item.classList.toggle('ok');
-        item.classList.toggle('pendencia');
+    function zerarPlantao() {
+        if(confirm("Limpar todos os registros do histórico?")) {
+            db.rondas = [];
+            saveDB();
+            renderRondas();
+        }
     }
 
+    // --- PERFIL ---
     function salvarPerfil() {
         db.perfil = {
-            nome: document.getElementById('p-nome').value.trim(),
-            matricula: document.getElementById('p-matrícula').value,
-            placa: document.getElementById('p-placa').value.toUpperCase().trim(),
-            cargo: document.getElementById('p-cargo').value.trim(),
-            empresa: document.getElementById('p-empresa').value.trim(),
-            cnpj: document.getElementById('p-cnpj').value.trim()
+            nome: document.getElementById('p-nome').value,
+            placa: document.getElementById('p-placa').value,
+            mat: document.getElementById('p-mat').value
         };
         saveDB();
-        alert("✅ Perfil salvo!");
+        alert("Perfil atualizado!");
     }
 
-    function gerarPDF(ronda) {
-        alert(`✅ Card gerado para: ${ronda.posto}`);
-        // Coloque aqui o código completo do jsPDF se quiser o PDF real
-    }
-
-    async function previewImage(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => { fotoBase64 = e.target.result; };
-            reader.readAsDataURL(input.files[0]);
-        }
+    function carregarPerfil() {
+        document.getElementById('p-nome').value = db.perfil.nome || '';
+        document.getElementById('p-placa').value = db.perfil.placa || '';
+        document.getElementById('p-mat').value = db.perfil.mat || '';
     }
 
     window.onload = () => showView('home');
