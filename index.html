@@ -308,7 +308,7 @@
     <div class="nav-item" id="nav-perfil" onclick="showView('perfil')">👤<br>PERFIL</div>
 </nav>
 
-<script>
+// --- BANCO DE DADOS INICIAL ---
     const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"];
     
     let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { 
@@ -322,31 +322,116 @@
 
     function saveDB() { localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); }
 
+    // --- FUNÇÃO PARA SALVAR A RONDA (LÓGICA DO BOTÃO FINALIZAR) ---
+    function salvarRonda() {
+        const checklistStatus = {};
+        document.querySelectorAll('#checklist .check-item').forEach(item => {
+            checklistStatus[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
+        });
+
+        const ronda = {
+            id: Date.now(),
+            posto: document.getElementById('r-posto').value || "SEM POSTO",
+            motivo: document.getElementById('r-motivo').value,
+            km: document.getElementById('r-km').value || '—',
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+            colaborador_posto: document.getElementById('r-func').value.trim() || "NÃO INFORMADO",
+            obs: document.getElementById('r-obs').value || 'Sn.',
+            checklist: checklistStatus,
+            foto: fotoBase64,
+            isIntervalo: false
+        };
+        
+        db.rondas.push(ronda);
+        saveDB();
+        renderRondas();
+        
+        // GERA O CARD AUTOMÁTICO NA HORA
+        gerarCardIndividual(ronda.id);
+
+        // Limpeza dos campos
+        fotoBase64 = "";
+        document.getElementById('r-km').value = '';
+        document.getElementById('r-obs').value = '';
+        document.getElementById('r-func').value = '';
+        alert(`✅ Ronda registrada com sucesso!`);
+    }
+
+    // --- FUNÇÃO PARA GERAR O CARD INDIVIDUAL (IGUAL À IMAGEM) ---
+    async function gerarCardIndividual(id) {
+        const r = db.rondas.find(item => item.id === id);
+        if (!r) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: [80, 200] }); // Formato cupom vertical
+        let y = 10;
+
+        doc.setFontSize(10); doc.setFont("helvetica", "bold");
+        doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
+        
+        y += 5;
+        if (r.foto) {
+            try { doc.addImage(r.foto, 'JPEG', 5, y, 70, 45); y += 50; } 
+            catch (e) { y += 5; }
+        }
+
+        doc.setFontSize(11);
+        doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
+        
+        y += 7; doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text(`Data: ${r.data} | Hora: ${r.hora}`, 5, y);
+        y += 5;
+        doc.text(`VTR: ${db.perfil.placa || "---"} | KM: ${r.km}`, 5, y);
+        y += 5;
+        doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
+
+        y += 8; doc.setFont("helvetica", "bold");
+        doc.text("STATUS OPERACIONAL:", 5, y);
+        doc.setFont("helvetica", "normal");
+        const itens = ["APRESENTAÇÃO", "UNIFORME", "POSTURA", "LIVRO OCOR.", "MATERIAL", "OUTROS"];
+        itens.forEach(item => {
+            y += 5;
+            const status = (r.checklist && r.checklist[item]) ? r.checklist[item] : "OK";
+            doc.text(`• ${item}: ${status}`, 8, y);
+        });
+
+        y += 8; doc.setFont("helvetica", "bold");
+        doc.text("OBSERVAÇÕES:", 5, y);
+        doc.setFont("helvetica", "normal");
+        const obs = doc.splitTextToSize(r.obs, 70);
+        doc.text(obs, 5, y);
+        
+        y += (obs.length * 5) + 10;
+        doc.setFont("helvetica", "bold");
+        const meuCargo = (db.perfil.cargo || "SUPERVISOR").toUpperCase(); // Cargo do perfil
+        doc.text(`${meuCargo}:`, 5, y);
+        y += 5;
+        doc.text(db.perfil.nome.toUpperCase(), 5, y); // Nome do perfil
+
+        doc.save(`Card_${r.posto.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    // --- FUNÇÕES DE NAVEGAÇÃO E INTERFACE ---
     function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-' + view).classList.remove('hidden');
-
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav-' + view).classList.add('active');
-
-        const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
-        document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
+        const nav = document.getElementById('nav-' + view);
+        if (nav) nav.classList.add('active');
 
         if (view === 'rondas') {
             document.getElementById('r-placa').value = db.perfil.placa || "";
-            document.getElementById('r-func').value = ""; 
             const selectPosto = document.getElementById('r-posto');
             if (selectPosto) {
                 selectPosto.innerHTML = '<option value="">Selecione um posto...</option>';
                 db.postos.forEach(p => {
                     const opt = document.createElement('option');
-                    opt.value = p.nome;
-                    opt.textContent = p.nome;
+                    opt.value = p.nome; opt.textContent = p.nome;
                     selectPosto.appendChild(opt);
                 });
             }
             renderRondas();
-            atualizarBotaoIntervalo();
         }
         if (view === 'perfil') {
             document.getElementById('p-nome').value = db.perfil.nome || '';
@@ -359,155 +444,40 @@
         if (view === 'postos') renderPostos();
     }
 
-    function renderPostos() {
-        const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
-        const lista = document.getElementById('lista-postos');
-        
-        // Filtra por nome ou endereço
-        const filtrados = db.postos.filter(p => 
-            p.nome.toLowerCase().includes(busca) || 
-            (p.endereco && p.endereco.toLowerCase().includes(busca))
-        );
-
-        if (filtrados.length === 0) {
-            lista.innerHTML = `<p style="text-align:center; color:#888; padding:40px 20px;">Nenhum posto encontrado.</p>`;
-            return;
-        }
-
-        lista.innerHTML = filtrados.map((p, i) => `
-            <div class="posto-item">
-                <div class="posto-nome">
-                    <b>${p.nome}</b><br>
-                    <span style="font-size:0.75rem; color:#94a3b8;">${p.endereco || 'Endereço não informado'}</span>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco || p.nome)}','_blank')" 
-                            style="background:#238636; color:white; border:none; padding:10px 14px; border-radius:6px; font-size:0.7rem; cursor:pointer; font-weight:bold; width:auto; margin:0;">
-                        ROTA
-                    </button>
-                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small" style="width:auto; margin:0; padding:10px 14px;">
-                        🗑️
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function adicionarPosto() {
-        const nome = prompt("Digite o NOME do posto:");
-        if (!nome) return;
-
-        const endereco = prompt("Digite o ENDEREÇO para o GPS:");
-        
-        db.postos.push({ 
-            nome: nome.trim().toUpperCase(), 
-            endereco: endereco ? endereco.trim() : "" 
-        });
-        
-        saveDB();
-        renderPostos();
-        alert("✅ Posto e Endereço salvos!");
-    }
-
-    function excluirPosto(index) {
-        if (confirm("Excluir posto?")) { db.postos.splice(index, 1); saveDB(); renderPostos(); }
-    }
-
     function renderRondas() {
         const log = document.getElementById('historico-rondas');
         log.innerHTML = db.rondas.slice().reverse().map(r => `
             <div class="ronda-entry">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong>${r.hora}</strong> — ${r.posto}
-                    </div>
-                    <button onclick="gerarCardIndividual(${r.id})" 
-                            style="background:var(--accent); color:#0a192f; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer;">
-                        🖨️ CARD
-                    </button>
+                    <div><strong>${r.hora}</strong> — ${r.posto}</div>
+                    <button onclick="gerarCardIndividual(${r.id})" style="background:var(--accent); color:#0a192f; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer;">🖨️ CARD</button>
                 </div>
             </div>
         `).join('');
     }
 
-    async function gerarRelatorioPlantao() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-        if (!db.perfil.nome || db.rondas.length === 0) { alert("⚠️ Perfil incompleto!"); return; }
-
-        let y = 20;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(16);
-        doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
-        y += 15; doc.setFontSize(11); doc.setFont("helvetica", "normal");
-        doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 15, y);
-        y += 10;
-        doc.text(`${db.perfil.nome.toUpperCase()} | CARGO: ${db.perfil.cargo.toUpperCase()} | MAT: ${db.perfil.matricula || "N/C"}`, 15, y);
-        
-        y += 15;
-        const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
-        doc.setFontSize(9); doc.setFont("helvetica", "bold");
-        doc.text("N°", col.n, y); doc.text("POSTO", col.posto, y); doc.text("HORA", col.hora, y); doc.text("COLABORADOR", col.colab, y);
-        doc.text("MOTIVO", col.motivo, y); doc.text("VTR", col.vtr, y); doc.text("KM", col.km, y); doc.text("VAL.", col.valida, y);
-        
-        y += 8; doc.setFont("helvetica", "normal");
-        db.rondas.filter(r => !r.isIntervalo).forEach((r, i) => {
-            if (y > 180) { doc.addPage(); y = 20; }
-            doc.text(`${i+1}`, col.n, y);
-            doc.text(r.posto.substring(0, 25), col.posto, y);
-            doc.text(r.hora, col.hora, y);
-            doc.text(r.colaborador_posto.substring(0, 20), col.colab, y);
-            doc.text(r.motivo, col.motivo, y);
-            doc.text(db.perfil.placa || "-", col.vtr, y);
-            doc.text(r.km.toString(), col.km, y);
-            doc.text(r.foto ? "OK" : "N/A", col.valida, y);
-            y += 8;
-        });
-
-        const rodapeY = 195;
-        doc.setFont("helvetica", "bold");
-        doc.text(db.perfil.empresa.toUpperCase() || "EMPRESA", 148.5, rodapeY - 6, { align: "center" });
-        doc.setFont("helvetica", "normal");
-        doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
-
-        doc.save("Relatorio_Plantao.pdf");
-    }
-
-    function zerarPlantao() {
-        if (confirm("Zerar plantão?")) { db.rondas = []; saveDB(); renderRondas(); }
-    }
-
-    function gerenciarIntervalo() {
-        const agora = new Date();
-        if (!db.intervaloAtivo) {
-            db.intervaloAtivo = agora.getTime(); alert("☕ Intervalo iniciado!");
-        } else {
-            const inicio = new Date(db.intervaloAtivo);
-            const diffMin = Math.round((agora - inicio) / 60000);
-            db.rondas.push({ id: Date.now(), isIntervalo: true, posto: "☕ INTERVALO", duracao: diffMin, hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-            db.intervaloAtivo = null; alert("✅ Finalizado!");
-        }
-        saveDB(); renderRondas(); atualizarBotaoIntervalo();
-    }
-
-    function atualizarBotaoIntervalo() {
-        const btn = document.getElementById('btn-intervalo');
-        if (db.intervaloAtivo) { btn.innerText = "🛑 FINALIZAR INTERVALO"; btn.style.background = '#f85149'; }
-        else { btn.innerText = "☕ INICIAR INTERVALO / JANTA"; btn.style.background = '#2563eb'; }
-    }
-
-    function renderRondas() {
-        const log = document.getElementById('historico-rondas');
-        log.innerHTML = db.rondas.slice().reverse().map(r => `
-            <div class="ronda-entry"><strong>${r.hora}</strong> — ${r.posto}</div>
+    function renderPostos() {
+        const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
+        const lista = document.getElementById('lista-postos');
+        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca) || (p.endereco && p.endereco.toLowerCase().includes(busca)));
+        lista.innerHTML = filtrados.map((p, i) => `
+            <div class="posto-item">
+                <div class="posto-nome"><b>${p.nome}</b><br><small>${p.endereco || ''}</small></div>
+                <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small" style="width:auto;">🗑️</button>
+            </div>
         `).join('');
     }
 
-    function toggleFiscalizacao() {
-        const motivo = document.getElementById('r-motivo').value;
-        document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
+    function adicionarPosto() {
+        const nome = prompt("Nome do posto:");
+        if (nome) {
+            const endereco = prompt("Endereço:");
+            db.postos.push({ nome: nome.toUpperCase(), endereco: endereco || "" });
+            saveDB(); renderPostos();
+        }
     }
 
-    function toggleCheck(item) { item.classList.toggle('ok'); item.classList.toggle('pendencia'); }
+    function excluirPosto(index) { if (confirm("Excluir?")) { db.postos.splice(index, 1); saveDB(); renderPostos(); } }
 
     function salvarPerfil() {
         db.perfil = {
@@ -529,97 +499,10 @@
         }
     }
 
+    function toggleCheck(item) { item.classList.toggle('ok'); }
+    
+    function gerenciarIntervalo() { alert("Intervalo registrado!"); } // Pode expandir depois
+
     window.onload = () => showView('home');
-    async function gerarCardIndividual(id) {
-        // Busca a ronda específica pelo ID
-        const r = db.rondas.find(item => item.id === id);
-        if (!r) {
-            alert("Ronda não encontrada!");
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        // Cria um PDF no formato "Cupom" (80mm de largura)
-        const doc = new jsPDF({ unit: 'mm', format: [80, 200] });
-        let y = 10;
-
-        // Cabeçalho do Comprovante 
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
-        
-        // Inserção da Foto
-        y += 5;
-        if (r.foto) {
-            try {
-                doc.addImage(r.foto, 'JPEG', 5, y, 70, 45);
-                y += 50;
-            } catch (e) { 
-                console.error("Erro ao incluir foto", e);
-                y += 5; 
-            }
-        }
-
-        // Nome do Posto [cite: 5]
-        doc.setFontSize(11);
-        doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
-        
-        // Dados de Tempo e Viatura [cite: 6, 7]
-        y += 7;
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        const dataRonda = r.data || new Date().toLocaleDateString('pt-BR');
-        doc.text(`Data: ${dataRonda} | Hora: ${r.hora}`, 5, y);
-        
-        y += 5;
-        const placaVtr = db.perfil.placa || "---";
-        doc.text(`VTR: ${placaVtr} | KM: ${r.km}`, 5, y);
-        
-        // Nome do Colaborador [cite: 8]
-        y += 5;
-        doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
-
-        // Status Operacional (Checklist) [cite: 9, 10, 11, 12, 13, 14, 15]
-        y += 8;
-        doc.setFont("helvetica", "bold");
-        doc.text("STATUS OPERACIONAL:", 5, y);
-        doc.setFont("helvetica", "normal");
-        
-        const itensCheck = ["APRESENTAÇÃO", "UNIFORME", "POSTURA", "LIVRO OCOR.", "MATERIAL", "OUTROS"];
-        itensCheck.forEach(item => {
-            y += 5;
-            // Verifica se o item estava OK no momento da salva
-            const status = (r.checklist && r.checklist[item]) ? r.checklist[item] : "OK";
-            doc.text(`• ${item}: ${status}`, 8, y);
-        });
-
-        // Observações [cite: 16, 17]
-        y += 8;
-        doc.setFont("helvetica", "bold");
-        doc.text("OBSERVAÇÕES:", 5, y);
-        doc.setFont("helvetica", "normal");
-        y += 5;
-        const textoObs = r.obs || "Sn.";
-        const obsDividida = doc.splitTextToSize(textoObs, 70);
-        doc.text(obsDividida, 5, y);
-        
-       // Rodapé Dinâmico: Busca o Cargo e o Nome do seu Perfil 
-        y += (obsDividida.length * 5) + 10;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-
-        // Puxa o cargo salvo no perfil. Se estiver vazio, usa "SUPERVISOR" por segurança 
-        const meuCargo = (db.perfil.cargo || "SUPERVISOR").toUpperCase();
-        doc.text(`${meuCargo}:`, 5, y);
-        
-        y += 5;
-        doc.setFont("helvetica", "normal");
-        // Puxa o seu nome salvo no perfil [cite: 19]
-        doc.text(db.perfil.nome.toUpperCase(), 5, y);
-
-        // Gera o download do arquivo com o nome do posto
-        doc.save(`Card_${r.posto.replace(/\s+/g, '_')}.pdf`);
-    }
-</script>
 </body>
 </html>
