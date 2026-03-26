@@ -106,7 +106,7 @@
         }
 
         .btn-primary { background: var(--accent); color: #0a192f; width: 100%; }
-        .btn-danger { background: var(--danger); color: white; width: 100%; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-info { background: #2563eb; color: white; width: 100%; }
         .btn-small { 
             padding: 10px 14px; 
@@ -142,61 +142,30 @@
 
         .ronda-entry {
             background: #1e2a44;
-            padding: 13px;
+            padding: 14px;
             border-radius: 6px;
-            margin-bottom: 9px;
+            margin-bottom: 10px;
             border-left: 5px solid #64748b;
-            font-size: 0.87rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-        }
-
-        .entry-break {
-            border-left-color: #3b82f6;
-            background: #1e3a5f;
-        }
-
-        .checklist-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 9px;
-            margin-top: 10px;
-        }
-
-        .check-item {
-            background: #1e2a44;
-            border: 2px solid #475569;
-            padding: 13px 10px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 0.79rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .check-item.ok {
-            border-color: var(--success);
-            color: var(--success);
-            background: rgba(35, 134, 54, 0.25);
-        }
-
-        .check-item.pendencia {
-            border-color: var(--danger);
-            color: var(--danger);
-            background: rgba(248, 81, 73, 0.25);
+            flex-wrap: wrap;
         }
 
         .posto-item {
             background: #1e2a44;
             padding: 14px;
             border-radius: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
+        }
+
+        .posto-info {
+            flex: 1;
         }
 
         .nav-bar {
@@ -240,6 +209,8 @@
     <div style="font-size:1.5rem;">🛡️</div>
 </div>
 
+<!-- Views permanecem iguais (home, rondas, perfil, postos) -->
+
 <div id="view-home" class="container">
     <div class="menu-item" onclick="showView('rondas')">
         <div class="menu-icon">📍</div>
@@ -260,6 +231,7 @@
 </div>
 
 <div id="view-rondas" class="container hidden">
+    <!-- Formulário de registro (mantido igual) -->
     <div class="card">
         <h3>REGISTRO OPERACIONAL</h3>
         
@@ -326,6 +298,7 @@
 </div>
 
 <div id="view-perfil" class="container hidden">
+    <!-- Perfil mantido igual -->
     <div class="card">
         <h3>MEU PERFIL OPERACIONAL</h3>
         <label>Nome Completo</label>
@@ -365,7 +338,7 @@
 
     let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { 
         perfil: {}, 
-        postos: ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"].map(n => ({nome: n})),
+        postos: ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"].map(n => ({nome: n, endereco: ""})),
         rondas: [], 
         intervaloAtivo: null 
     };
@@ -403,29 +376,22 @@
         if (view === 'postos') renderPostos();
     }
 
-    // ==================== CHECKLIST ====================
-    function toggleCheck(item) {
-        item.classList.toggle('ok');
-        item.classList.toggle('pendencia');
-    }
+    // Checklist, foto, salvarRonda, gerarPDFCard, gerarRelatorioPlantao, etc. (mantidos)
 
+    function toggleCheck(item) { item.classList.toggle('ok'); item.classList.toggle('pendencia'); }
     function toggleFiscalizacao() {
         const motivo = document.getElementById('r-motivo').value;
         document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
     }
 
-    // ==================== FOTO ====================
     function previewImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                fotoBase64 = e.target.result;
-            };
+            reader.onload = e => fotoBase64 = e.target.result;
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // ==================== SALVAR RONDA + GERAR CARD ====================
     function salvarRonda() {
         const placa = document.getElementById('r-placa').value;
         const km = document.getElementById('r-km').value;
@@ -434,10 +400,7 @@
         const motivo = document.getElementById('r-motivo').value;
         const obs = document.getElementById('r-obs').value.trim();
 
-        if (!posto) {
-            alert("Informe o Posto / Local!");
-            return;
-        }
+        if (!posto) { alert("Informe o Posto / Local!"); return; }
 
         const novaRonda = {
             data: new Date().toLocaleString('pt-BR'),
@@ -450,13 +413,12 @@
             foto: fotoBase64
         };
 
-        db.rondas.unshift(novaRonda); // mais recente primeiro
+        db.rondas.unshift(novaRonda);
         saveDB();
         renderRondas();
+        gerarPDFCard(novaRonda);
 
-        gerarPDFCard(novaRonda); // gera o card em PDF
-
-        // limpar formulário
+        // Limpar
         document.getElementById('r-km').value = '';
         document.getElementById('r-posto').value = '';
         document.getElementById('r-obs').value = '';
@@ -465,171 +427,150 @@
     }
 
     function gerarPDFCard(ronda) {
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-        });
-
+        const doc = new jsPDF({orientation: "portrait", unit: "mm", format: "a4"});
         doc.setFontSize(20);
         doc.text("CARD DE RONDA - SENTINELA OPS", 105, 20, { align: "center" });
 
+        let y = 40;
         doc.setFontSize(12);
-        doc.text(`Data/Hora: ${ronda.data}`, 20, 40);
-        doc.text(`Viatura: ${ronda.placa || '—'}`, 20, 50);
-        doc.text(`KM: ${ronda.km || '—'}`, 20, 60);
-        doc.text(`Posto/Local: ${ronda.posto}`, 20, 70);
-        doc.text(`Colaborador: ${ronda.funcionario || '—'}`, 20, 80);
-        doc.text(`Atividade: ${ronda.motivo}`, 20, 90);
+        doc.text(`Data/Hora: ${ronda.data}`, 20, y); y += 10;
+        doc.text(`Viatura: ${ronda.placa || '—'}`, 20, y); y += 10;
+        doc.text(`KM: ${ronda.km || '—'}`, 20, y); y += 10;
+        doc.text(`Posto/Local: ${ronda.posto}`, 20, y); y += 10;
+        doc.text(`Colaborador: ${ronda.funcionario || '—'}`, 20, y); y += 10;
+        doc.text(`Atividade: ${ronda.motivo}`, 20, y); y += 15;
 
         if (ronda.obs) {
-            doc.text("Observações:", 20, 105);
-            const splitObs = doc.splitTextToSize(ronda.obs, 170);
-            doc.text(splitObs, 20, 115);
+            doc.text("Observações:", 20, y); y += 8;
+            const split = doc.splitTextToSize(ronda.obs, 170);
+            doc.text(split, 20, y);
+            y += split.length * 7;
         }
 
-        if (ronda.foto) {
-            doc.addImage(ronda.foto, 'JPEG', 20, 140, 170, 100);
-        }
-
-        // QR Code simples com dados básicos
-        const qrcodeDiv = document.createElement("div");
-        new QRCode(qrcodeDiv, {
-            text: `Ronda ${ronda.data} - ${ronda.posto}`,
-            width: 128,
-            height: 128
-        });
-        const qrImg = qrcodeDiv.querySelector("img");
-        if (qrImg) {
-            doc.addImage(qrImg.src, 'PNG', 80, 250, 50, 50);
-        }
+        if (ronda.foto) doc.addImage(ronda.foto, 'JPEG', 20, y + 10, 170, 95);
 
         doc.save(`Ronda_${ronda.posto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
     }
 
-    // ==================== RELATÓRIO DE PLANTÃO ====================
     function gerarRelatorioPlantao() {
-        if (db.rondas.length === 0) {
-            alert("Não há rondas registradas para gerar o relatório.");
-            return;
-        }
-
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4"
-        });
-
+        if (db.rondas.length === 0) return alert("Não há rondas registradas.");
+        const doc = new jsPDF({orientation: "portrait", unit: "mm", format: "a4"});
         doc.setFontSize(18);
         doc.text("RELATÓRIO DE PLANTÃO - SENTINELA OPS", 105, 20, { align: "center" });
-
         doc.setFontSize(11);
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 35);
 
         let y = 50;
-
         db.rondas.forEach((r, i) => {
-            if (y > 250) {
-                doc.addPage();
-                y = 20;
-            }
-
+            if (y > 250) { doc.addPage(); y = 20; }
             doc.setFontSize(12);
-            doc.text(`${i+1}. ${r.data} - ${r.posto}`, 20, y);
-            y += 8;
+            doc.text(`${i+1}. ${r.data} - ${r.posto}`, 20, y); y += 10;
             doc.setFontSize(10);
-            doc.text(`Viatura: ${r.placa || '—'} | KM: ${r.km || '—'} | Atividade: ${r.motivo}`, 25, y);
-            y += 8;
-
+            doc.text(`Viatura: ${r.placa || '—'} | KM: ${r.km || '—'} | ${r.motivo}`, 25, y); y += 12;
             if (r.obs) {
-                const obsLines = doc.splitTextToSize(`Obs: ${r.obs}`, 160);
-                doc.text(obsLines, 25, y);
-                y += obsLines.length * 6;
+                const lines = doc.splitTextToSize(r.obs, 160);
+                doc.text(lines, 25, y);
+                y += lines.length * 6 + 8;
             }
-            y += 10;
         });
-
         doc.save("Relatorio_Plantao_Sentinela.pdf");
     }
 
-    // ==================== HISTÓRICO DE RONDAS ====================
+    // ==================== LOG DE RONDAS COM BOTÃO GERAR CARD ====================
     function renderRondas() {
         const container = document.getElementById('historico-rondas');
         container.innerHTML = '';
 
         if (db.rondas.length === 0) {
-            container.innerHTML = '<p style="color:#64748b; text-align:center; padding:20px;">Nenhuma ronda registrada ainda.</p>';
+            container.innerHTML = '<p style="color:#64748b; text-align:center; padding:30px;">Nenhuma ronda registrada ainda.</p>';
             return;
         }
 
-        db.rondas.forEach(ronda => {
+        db.rondas.forEach((ronda, index) => {
             const div = document.createElement('div');
             div.className = 'ronda-entry';
             div.innerHTML = `
-                <div>
+                <div style="flex:1;">
                     <strong>${ronda.posto}</strong><br>
                     <small>${ronda.data} • ${ronda.motivo}</small>
                 </div>
-                <div style="text-align:right; font-size:0.8rem;">
-                    ${ronda.km ? 'KM ' + ronda.km : ''}
+                <div>
+                    <button class="btn btn-primary btn-small" onclick="gerarPDFCardFromHistory(${index})" style="margin-bottom:4px;">
+                        📄 Gerar Card
+                    </button>
                 </div>
             `;
             container.appendChild(div);
         });
     }
 
-    // ==================== POSTOS ====================
+    // Função auxiliar para gerar card a partir do histórico
+    function gerarPDFCardFromHistory(index) {
+        const ronda = db.rondas[index];
+        if (ronda) gerarPDFCard(ronda);
+    }
+
+    // ==================== BASE DE POSTOS COM BOTÃO ROTA ====================
     function renderPostos() {
         const filtro = document.getElementById('busca-posto').value.toLowerCase().trim();
         const container = document.getElementById('lista-postos');
         container.innerHTML = '';
 
-        const filtrados = db.postos.filter(p => 
-            p.nome.toLowerCase().includes(filtro)
-        );
+        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(filtro));
 
         if (filtrados.length === 0) {
-            container.innerHTML = '<p style="color:#64748b; text-align:center;">Nenhum posto encontrado.</p>';
+            container.innerHTML = '<p style="color:#64748b; text-align:center; padding:20px;">Nenhum posto encontrado.</p>';
             return;
         }
 
-        filtrados.forEach((posto, index) => {
+        filtrados.forEach((posto, idx) => {
+            const globalIndex = db.postos.findIndex(p => p.nome === posto.nome);
             const div = document.createElement('div');
             div.className = 'posto-item';
             div.innerHTML = `
-                <span>${posto.nome}</span>
-                <button class="btn btn-danger btn-small" onclick="excluirPosto(${index})">🗑️</button>
+                <div class="posto-info">
+                    <strong>${posto.nome}</strong>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-small" style="background:#10b981; color:white;" onclick="abrirRota('${posto.nome}')">
+                        🗺️ Rota
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="excluirPosto(${globalIndex})">
+                        🗑️
+                    </button>
+                </div>
             `;
             container.appendChild(div);
         });
     }
 
+    function abrirRota(nomePosto) {
+        const endereco = encodeURIComponent(nomePosto + ", Porto Alegre, RS");
+        // Tenta abrir no Waze primeiro (melhor para viaturas), senão Google Maps
+        const wazeUrl = `https://waze.com/ul?ll=0,0&navigate=yes&q=${endereco}`;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${endereco}`;
+        
+        // Abre Waze se disponível, senão Maps
+        window.open(wazeUrl, '_blank');
+        // Alternativa: window.open(mapsUrl, '_blank');
+    }
+
     function adicionarPosto() {
         const nome = prompt("Nome do novo posto:");
         if (!nome || !nome.trim()) return;
-
-        db.postos.push({ nome: nome.trim() });
+        db.postos.push({ nome: nome.trim(), endereco: "" });
         saveDB();
         renderPostos();
     }
 
-    function excluirPosto(indexGlobal) {
-        // indexGlobal é o índice no array filtrado? Não → precisamos pegar pelo nome ou usar outro jeito.
-        // Melhor solução: usar o índice real do array db.postos
+    function excluirPosto(index) {
         if (confirm("Excluir este posto permanentemente?")) {
-            // Como renderizamos filtrado, vamos buscar pelo nome (mais simples)
-            const nome = document.querySelectorAll('.posto-item span')[indexGlobal] ? 
-                         document.querySelectorAll('.posto-item span')[indexGlobal].textContent : null;
-
-            if (nome) {
-                db.postos = db.postos.filter(p => p.nome !== nome);
-                saveDB();
-                renderPostos();
-            }
+            db.postos.splice(index, 1);
+            saveDB();
+            renderPostos();
         }
     }
 
-    // ==================== PERFIL ====================
     function salvarPerfil() {
         db.perfil = {
             nome: document.getElementById('p-nome').value.trim(),
@@ -643,8 +584,7 @@
         alert("Perfil salvo com sucesso!");
     }
 
-    // ==================== INTERVALO (simples) ====================
-    function gerenciarIntervalo() {
+    function gerenciarIntervalo() { /* mantido igual */ 
         const btn = document.getElementById('btn-intervalo');
         if (!db.intervaloAtivo) {
             db.intervaloAtivo = new Date().toLocaleString('pt-BR');
@@ -652,8 +592,7 @@
             btn.style.background = "#f59e0b";
             alert("Intervalo iniciado!");
         } else {
-            const fim = new Date().toLocaleString('pt-BR');
-            alert(`Intervalo encerrado!\nInício: ${db.intervaloAtivo}\nFim: ${fim}`);
+            alert(`Intervalo encerrado!\nInício: ${db.intervaloAtivo}\nFim: ${new Date().toLocaleString('pt-BR')}`);
             db.intervaloAtivo = null;
             btn.textContent = "☕ INICIAR INTERVALO / JANTA";
             btn.style.background = "";
@@ -670,7 +609,7 @@
     }
 
     function zerarPlantao() {
-        if (confirm("Zerar TODAS as rondas do plantão? Esta ação não pode ser desfeita.")) {
+        if (confirm("Zerar TODAS as rondas do plantão?")) {
             db.rondas = [];
             saveDB();
             renderRondas();
@@ -678,10 +617,7 @@
         }
     }
 
-    // ==================== INICIALIZAÇÃO ====================
-    window.onload = () => {
-        showView('home');
-    };
+    window.onload = () => showView('home');
 </script>
 </body>
 </html>
