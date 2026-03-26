@@ -187,16 +187,61 @@
 
     async function gerarRelatorioPlantao() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-        doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text("RELATÓRIO DE PLANTÃO", 148, 20, {align:"center"});
-        doc.setFontSize(10); doc.text(`SUPERVISOR: ${db.perfil.nome || ""} | CARGO: ${db.perfil.cargo || ""}`, 15, 35);
-        let y = 50;
-        db.rondas.filter(r => !r.isIntervalo).forEach((r, i) => {
-            if(y > 180) { doc.addPage(); y = 20; }
-            doc.text(`${i+1}. ${r.hora} - ${r.posto} - Colab: ${r.colaborador_posto} - KM: ${r.km}`, 15, y);
-            y += 7;
+        const doc = new jsPDF('l', 'mm', 'a4'); // Formato Paisagem (deitado) 
+        
+        if (!db.perfil.nome || db.rondas.length === 0) {
+            alert("⚠️ Complete seu perfil primeiro.");
+            return;
+        }
+
+        const margemEsq = 15;
+        let y = 15;
+        const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
+        
+        y += 15;
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, margemEsq, y);
+        y += 10;
+        // Puxa Nome, Cargo e Matrícula do seu Perfil [cite: 18, 19]
+        doc.text(`${db.perfil.nome.toUpperCase()}   ${db.perfil.cargo.toUpperCase()}   MAT: ${db.perfil.matricula || 'N/C'}`, margemEsq, y);
+
+        y += 15;
+        doc.setFontSize(9);
+        const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
+        doc.text("N°", col.n, y);
+        doc.text("POSTO", col.posto, y);
+        doc.text("HORA", col.hora, y);
+        doc.text("COLABORADOR", col.colab, y);
+        doc.text("MOTIVO", col.motivo, y);
+        doc.text("VTR", col.vtr, y);
+        doc.text("KM", col.km, y);
+        doc.text("VALIDAÇÃO", col.valida, y);
+
+        y += 8;
+        rondasEfetivas.forEach((r, index) => {
+            if (y > 185) { doc.addPage(); y = 20; }
+            doc.text(`${index + 1}.`, col.n, y);
+            doc.text(r.posto.toUpperCase().substring(0, 30), col.posto, y);
+            doc.text(r.hora, col.hora, y);
+            doc.text(r.colaborador_posto.toUpperCase(), col.colab, y);
+            doc.text(r.motivo.toUpperCase(), col.motivo, y);
+            doc.text(db.perfil.placa || "—", col.vtr, y);
+            doc.text(r.km.toString(), col.km, y);
+            doc.text(r.foto ? "OK" : "N/A", col.valida, y);
+            y += 8;
         });
-        doc.save("Relatorio_Plantao_Completo.pdf");
+
+        const rodapeY = 195;
+        doc.setFont("helvetica", "bold");
+        doc.text(db.perfil.empresa.toUpperCase() || "EMPRESA", 148.5, rodapeY - 6, { align: "center" });
+        doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
+
+        doc.save(`Relatorio_Sentinela.pdf`);
     }
 
     function gerenciarIntervalo() {
