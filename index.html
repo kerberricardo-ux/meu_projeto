@@ -436,17 +436,8 @@
         localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); 
     }
 
+    // --- GERENCIAMENTO DE TELAS ---
     function showView(view) {
-        document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
-        document.getElementById('view-' + view).classList.remove('hidden');
-
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav-' + view).classList.add('active');
-
-        const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
-        document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
-
-        function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-' + view).classList.remove('hidden');
 
@@ -458,11 +449,8 @@
 
         if (view === 'rondas') {
             document.getElementById('r-placa').value = db.perfil.placa || "";
-            
-            // 1. LIMPA O CAMPO DO COLABORADOR (PARA VOCÊ DIGITAR O NOME DO POSTO)
-            document.getElementById('r-func').value = ""; 
+            document.getElementById('r-func').value = ""; // Campo vazio para digitar o colaborador do posto
 
-            // 2. CARREGA A LISTA DE POSTOS NO SELECT
             const selectPosto = document.getElementById('r-posto');
             if (selectPosto) {
                 selectPosto.innerHTML = '<option value="">Selecione um posto...</option>';
@@ -473,7 +461,6 @@
                     selectPosto.appendChild(opt);
                 });
             }
-
             renderRondas();
             atualizarBotaoIntervalo();
         }
@@ -490,6 +477,210 @@
         if (view === 'postos') renderPostos();
     }
 
+    // --- GERENCIAMENTO DE POSTOS ---
+    function renderPostos() {
+        const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
+        const lista = document.getElementById('lista-postos');
+        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
+
+        lista.innerHTML = filtrados.map((p, i) => `
+            <div class="posto-item">
+                <div class="posto-nome">${p.nome}</div>
+                <div class="actions">
+                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function adicionarPosto() {
+        const nome = prompt("Nome do novo posto:");
+        if (!nome) return;
+        db.postos.push({ nome: nome.trim().toUpperCase(), endereco: "" });
+        saveDB();
+        renderPostos();
+    }
+
+    function excluirPosto(index) {
+        if (confirm("Excluir posto?")) {
+            db.postos.splice(index, 1);
+            saveDB();
+            renderPostos();
+        }
+    }
+
+    // --- REGISTRO DE RONDAS ---
+    function salvarRonda() {
+        const checklistStatus = {};
+        document.querySelectorAll('#checklist .check-item').forEach(item => {
+            checklistStatus[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
+        });
+
+        const ronda = {
+            id: Date.now(),
+            posto: document.getElementById('r-posto').value || "SEM POSTO",
+            motivo: document.getElementById('r-motivo').value,
+            km: document.getElementById('r-km').value || '—',
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+            colaborador_posto: document.getElementById('r-func').value.trim() || "NÃO INFORMADO",
+            obs: document.getElementById('r-obs').value || 'N/A',
+            checklist: checklistStatus,
+            foto: fotoBase64,
+            isIntervalo: false
+        };
+        
+        db.rondas.push(ronda);
+        saveDB();
+        renderRondas();
+        
+        fotoBase64 = "";
+        document.getElementById('r-km').value = '';
+        document.getElementById('r-obs').value = '';
+        document.getElementById('r-func').value = '';
+        alert(`✅ Ronda salva!`);
+    }
+
+    async function gerarRelatorioPlantao() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        
+        if (!db.perfil.nome || db.rondas.length === 0) {
+            alert("⚠️ Complete seu perfil primeiro.");
+            return;
+        }
+
+        const margemEsq = 15;
+        let y = 15;
+        const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
+        
+        y += 15;
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, margemEsq, y);
+        y += 10;
+        doc.text(`${db.perfil.nome.toUpperCase()}   ${db.perfil.cargo.toUpperCase()}   MAT: ${db.perfil.matricula || 'N/C'}`, margemEsq, y);
+
+        y += 15;
+        doc.setFontSize(9);
+        const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
+        doc.text("N°", col.n, y);
+        doc.text("POSTO", col.posto, y);
+        doc.text("HORA", col.hora, y);
+        doc.text("COLABORADOR", col.colab, y);
+        doc.text("MOTIVO", col.motivo, y);
+        doc.text("VTR", col.vtr, y);
+        doc.text("KM", col.km, y);
+        doc.text("VALIDAÇÃO", col.valida, y);
+
+        y += 8;
+        rondasEfetivas.forEach((r, index) => {
+            if (y > 185) { doc.addPage(); y = 20; }
+            doc.text(`${index + 1}.`, col.n, y);
+            doc.text(r.posto.toUpperCase().substring(0, 30), col.posto, y);
+            doc.text(r.hora, col.hora, y);
+            doc.text(r.colaborador_posto.toUpperCase(), col.colab, y);
+            doc.text(r.motivo.toUpperCase(), col.motivo, y);
+            doc.text(db.perfil.placa || "—", col.vtr, y);
+            doc.text(r.km.toString(), col.km, y);
+            doc.text(r.foto ? "OK" : "N/A", col.valida, y);
+            y += 8;
+        });
+
+        const rodapeY = 195;
+        doc.setFont("helvetica", "bold");
+        doc.text(db.perfil.empresa.toUpperCase() || "EMPRESA", 148.5, rodapeY - 6, { align: "center" });
+        doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
+
+        doc.save(`Relatorio_Sentinela.pdf`);
+    }
+
+    function zerarPlantao() {
+        if (confirm("Zerar plantão?")) {
+            db.rondas = [];
+            saveDB();
+            renderRondas();
+            alert("Plantão zerado!");
+        }
+    }
+
+    function gerenciarIntervalo() {
+        const agora = new Date();
+        if (!db.intervaloAtivo) {
+            db.intervaloAtivo = agora.getTime();
+            alert("Intervalo iniciado!");
+        } else {
+            const inicio = new Date(db.intervaloAtivo);
+            const diffMin = Math.round((agora - inicio) / 60000);
+            db.rondas.push({ 
+                id: Date.now(), isIntervalo: true, posto: "☕ INTERVALO", duracao: diffMin, 
+                hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            });
+            db.intervaloAtivo = null;
+            alert("Intervalo finalizado!");
+        }
+        saveDB();
+        renderRondas();
+        atualizarBotaoIntervalo();
+    }
+
+    function atualizarBotaoIntervalo() {
+        const btn = document.getElementById('btn-intervalo');
+        if (db.intervaloAtivo) {
+            btn.innerText = "🛑 FINALIZAR INTERVALO";
+            btn.style.background = '#f85149';
+        } else {
+            btn.innerText = "☕ INICIAR INTERVALO / JANTA";
+            btn.style.background = '#2563eb';
+        }
+    }
+
+    function renderRondas() {
+        const log = document.getElementById('historico-rondas');
+        log.innerHTML = db.rondas.slice().reverse().map(r => `
+            <div class="ronda-entry ${r.isIntervalo ? 'entry-break' : ''}">
+                <strong>${r.hora}</strong> — ${r.posto} ${r.duracao ? '('+r.duracao+'min)' : ''}
+            </div>
+        `).join('');
+    }
+
+    function toggleFiscalizacao() {
+        const motivo = document.getElementById('r-motivo').value;
+        document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
+    }
+
+    function toggleCheck(item) {
+        item.classList.toggle('ok');
+        item.classList.toggle('pendencia');
+    }
+
+    function salvarPerfil() {
+        db.perfil = {
+            nome: document.getElementById('p-nome').value.trim(),
+            matricula: document.getElementById('p-matrícula').value,
+            placa: document.getElementById('p-placa').value.toUpperCase().trim(),
+            cargo: document.getElementById('p-cargo').value.trim(),
+            empresa: document.getElementById('p-empresa').value.trim(),
+            cnpj: document.getElementById('p-cnpj').value.trim()
+        };
+        saveDB();
+        alert("✅ Perfil salvo!");
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => fotoBase64 = e.target.result;
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    window.onload = () => showView('home');
+</script>
     // ====================== GERENCIAMENTO DE POSTOS ======================
     function renderPostos() {
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
@@ -579,39 +770,44 @@
             checklistStatus[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
         });
 
+        // CAPTURA O NOME QUE VOCÊ DIGITOU NO CAMPO DE COLABORADOR
+        const nomeFiscalizado = document.getElementById('r-func').value.trim();
+
         const ronda = {
             id: Date.now(),
-            posto: document.getElementById('r-posto').value.trim() || "SEM POSTO",
+            posto: document.getElementById('r-posto').value || "SEM POSTO",
             motivo: document.getElementById('r-motivo').value,
             km: document.getElementById('r-km').value || '—',
             data: new Date().toLocaleDateString('pt-BR'),
             hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+            // SALVA O NOME DIGITADO PARA APARECER NO PDF
+            colaborador_posto: nomeFiscalizado || "NÃO INFORMADO",
             obs: document.getElementById('r-obs').value || 'N/A',
             checklist: checklistStatus,
+            foto: fotoBase64,
             isIntervalo: false
         };
         
         db.rondas.push(ronda);
         saveDB();
         renderRondas();
-        gerarPDF(ronda);
-
-        // Limpar formulário
+        
+        // Limpeza após salvar
+        fotoBase64 = ""; 
+        document.getElementById('r-foto').value = ""; 
         document.getElementById('r-km').value = '';
         document.getElementById('r-obs').value = '';
+        document.getElementById('r-func').value = ''; 
         document.getElementById('r-posto').value = '';
-        document.getElementById('r-motivo').value = 'Fiscalização';
-        toggleFiscalizacao();
-        document.querySelectorAll('#checklist .check-item').forEach(item => item.classList.add('ok'));
+        alert(`✅ Ronda salva com sucesso!`);
     }
 
-  async function gerarRelatorioPlantao() {
+    async function gerarRelatorioPlantao() {
         const { jsPDF } = window.jspdf;
-        // 'l' ativa o modo Paisagem (folha deitada) para caber as colunas da sua imagem
         const doc = new jsPDF('l', 'mm', 'a4');
         
         if (!db.perfil.nome || db.rondas.length === 0) {
-            alert("⚠️ Preencha seu perfil completo e registre rondas antes de gerar o relatório.");
+            alert("⚠️ Preencha seu perfil e registre rondas antes de gerar o relatório.");
             return;
         }
 
@@ -625,7 +821,6 @@
         doc.setFontSize(16);
         doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
         
-        // --- DATA E INFORMAÇÕES DO PERFIL ---
         y += 15;
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
@@ -635,18 +830,16 @@
         const matricula = db.perfil.matricula || "N/C";
         doc.text(`${db.perfil.nome.toUpperCase()}     ${db.perfil.cargo.toUpperCase()}     MAT: ${matricula}`, margemEsq, y);
 
-        // --- TOTAL DE VISITAS ---
         y += 15;
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL DE VISITAS (${rondasEfetivas.length})`, margemEsq, y);
         
         y += 8;
-        doc.line(margemEsq, y, 282, y); // Linha divisória horizontal
+        doc.line(margemEsq, y, 282, y); 
         y += 10;
 
-        // --- CABEÇALHO DAS COLUNAS (ALINHADO COM SUA IMAGEM) ---
+        // --- CABEÇALHO DAS COLUNAS ---
         doc.setFontSize(9);
-        // Posições X de cada coluna para não amontoar
         const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
 
         doc.text("N°", col.n, y);
@@ -670,7 +863,10 @@
             doc.text(`${index + 1}.`, col.n, y);
             doc.text(r.posto.toUpperCase().substring(0, 30), col.posto, y);
             doc.text(r.hora, col.hora, y);
-            doc.text(db.perfil.nome.toUpperCase().substring(0, 25), col.colab, y);
+            
+            // AQUI ESTÁ A MUDANÇA: r.colaborador_posto em vez do seu nome
+            doc.text(r.colaborador_posto.toUpperCase().substring(0, 25), col.colab, y);
+            
             doc.text(r.motivo.toUpperCase(), col.motivo, y);
             doc.text(db.perfil.placa || "—", col.vtr, y);
             doc.text(r.km.toString(), col.km, y);
@@ -679,6 +875,17 @@
             y += 8;
         });
 
+        // --- RODAPÉ CENTRALIZADO (EMPRESA E CNPJ) ---
+        const rodapeY = 195;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const nomeEmpresa = db.perfil.empresa ? db.perfil.empresa.toUpperCase() : "EMPRESA";
+        doc.text(nomeEmpresa, 148.5, rodapeY - 6, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
+
+        doc.save(`RELATORIO_PLANTAO_${db.perfil.nome.replace(/\s+/g, '_')}.pdf`);
+    }
         // --- RODAPÉ CENTRALIZADO (EMPRESA E CNPJ) ---
         const rodapeY = 195;
         doc.setFontSize(10);
