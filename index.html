@@ -209,8 +209,6 @@
     <div style="font-size:1.5rem;">🛡️</div>
 </div>
 
-<!-- Views permanecem iguais (home, rondas, perfil, postos) -->
-
 <div id="view-home" class="container">
     <div class="menu-item" onclick="showView('rondas')">
         <div class="menu-icon">📍</div>
@@ -231,7 +229,6 @@
 </div>
 
 <div id="view-rondas" class="container hidden">
-    <!-- Formulário de registro (mantido igual) -->
     <div class="card">
         <h3>REGISTRO OPERACIONAL</h3>
         
@@ -298,7 +295,6 @@
 </div>
 
 <div id="view-perfil" class="container hidden">
-    <!-- Perfil mantido igual -->
     <div class="card">
         <h3>MEU PERFIL OPERACIONAL</h3>
         <label>Nome Completo</label>
@@ -376,9 +372,11 @@
         if (view === 'postos') renderPostos();
     }
 
-    // Checklist, foto, salvarRonda, gerarPDFCard, gerarRelatorioPlantao, etc. (mantidos)
+    function toggleCheck(item) { 
+        item.classList.toggle('ok'); 
+        item.classList.toggle('pendencia'); 
+    }
 
-    function toggleCheck(item) { item.classList.toggle('ok'); item.classList.toggle('pendencia'); }
     function toggleFiscalizacao() {
         const motivo = document.getElementById('r-motivo').value;
         document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
@@ -400,7 +398,10 @@
         const motivo = document.getElementById('r-motivo').value;
         const obs = document.getElementById('r-obs').value.trim();
 
-        if (!posto) { alert("Informe o Posto / Local!"); return; }
+        if (!posto) { 
+            alert("Informe o Posto / Local!"); 
+            return; 
+        }
 
         const novaRonda = {
             data: new Date().toLocaleString('pt-BR'),
@@ -418,7 +419,7 @@
         renderRondas();
         gerarPDFCard(novaRonda);
 
-        // Limpar
+        // Limpar formulário
         document.getElementById('r-km').value = '';
         document.getElementById('r-posto').value = '';
         document.getElementById('r-obs').value = '';
@@ -452,31 +453,145 @@
         doc.save(`Ronda_${ronda.posto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
     }
 
+    // ====================== NOVO RELATÓRIO DE PLANTÃO ======================
     function gerarRelatorioPlantao() {
-        if (db.rondas.length === 0) return alert("Não há rondas registradas.");
-        const doc = new jsPDF({orientation: "portrait", unit: "mm", format: "a4"});
-        doc.setFontSize(18);
-        doc.text("RELATÓRIO DE PLANTÃO - SENTINELA OPS", 105, 20, { align: "center" });
-        doc.setFontSize(11);
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 35);
+        if (db.rondas.length === 0) {
+            return alert("Não há rondas registradas para gerar o relatório.");
+        }
 
-        let y = 50;
-        db.rondas.forEach((r, i) => {
-            if (y > 250) { doc.addPage(); y = 20; }
-            doc.setFontSize(12);
-            doc.text(`${i+1}. ${r.data} - ${r.posto}`, 20, y); y += 10;
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+
+        // Cabeçalho
+        doc.setFontSize(18);
+        doc.setTextColor(0, 0, 0);
+        doc.text("RELATÓRIO DE PLANTÃO", pageWidth / 2, 25, { align: "center" });
+
+        doc.setFontSize(11);
+        const dataAtual = new Date().toLocaleDateString('pt-BR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        doc.text(dataAtual.toUpperCase(), pageWidth / 2, 35, { align: "center" });
+
+        // Linha separadora
+        doc.setLineWidth(0.5);
+        doc.line(margin, 42, pageWidth - margin, 42);
+
+        // Dados do Colaborador
+        const perfil = db.perfil || {};
+        let y = 55;
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, "bold");
+        doc.text("COLABORADOR:", margin, y);
+        doc.setFont(undefined, "normal");
+        doc.text(perfil.nome || "Não informado", margin + 32, y);
+        y += 8;
+
+        doc.setFont(undefined, "bold");
+        doc.text("CARGO:", margin, y);
+        doc.setFont(undefined, "normal");
+        doc.text(perfil.cargo || "Não informado", margin + 32, y);
+        y += 8;
+
+        doc.setFont(undefined, "bold");
+        doc.text("MATRÍCULA:", margin, y);
+        doc.setFont(undefined, "normal");
+        doc.text(perfil.matricula || "Não informado", margin + 32, y);
+        y += 8;
+
+        doc.setFont(undefined, "bold");
+        doc.text("VIATURA:", margin, y);
+        doc.setFont(undefined, "normal");
+        doc.text(perfil.placa || "Não informada", margin + 32, y);
+        y += 12;
+
+        // Quantidade de visitas
+        doc.setFontSize(13);
+        doc.setFont(undefined, "bold");
+        doc.text(`QUANTIDADE DE VISITAS: ${db.rondas.length}`, margin, y);
+        y += 15;
+
+        // Lista de Rondas
+        doc.setFontSize(11);
+        doc.setFont(undefined, "bold");
+
+        db.rondas.forEach((ronda, i) => {
+            if (y > 240) {
+                doc.addPage();
+                y = 30;
+            }
+
+            doc.setFont(undefined, "bold");
+            doc.text(`${i + 1}.`, margin, y);
+            
+            doc.setFontSize(11);
+            doc.text(ronda.posto.toUpperCase(), margin + 8, y);
+            y += 7;
+
             doc.setFontSize(10);
-            doc.text(`Viatura: ${r.placa || '—'} | KM: ${r.km || '—'} | ${r.motivo}`, 25, y); y += 12;
-            if (r.obs) {
-                const lines = doc.splitTextToSize(r.obs, 160);
-                doc.text(lines, 25, y);
-                y += lines.length * 6 + 8;
+            doc.setFont(undefined, "normal");
+            
+            const hora = ronda.data.includes(' ') ? ronda.data.split(' ')[1] : ronda.data;
+
+            doc.text(`Hora: ${hora}`, margin + 8, y);
+            y += 6;
+            doc.text(`Colaborador: ${ronda.funcionario || perfil.nome || '—'}`, margin + 8, y);
+            y += 6;
+            doc.text(`Motivo: ${ronda.motivo}`, margin + 8, y);
+            y += 6;
+            doc.text(`Viatura: ${ronda.placa || perfil.placa || '—'}`, margin + 8, y);
+            y += 6;
+            doc.text(`KM: ${ronda.km || '—'}`, margin + 8, y);
+            y += 6;
+
+            // Validação baseada na foto
+            const validacao = ronda.foto ? "OK" : "PENDENTE";
+            doc.setFont(undefined, "bold");
+            doc.text(`Validação: ${validacao}`, margin + 8, y);
+            y += 10;
+
+            if (ronda.obs && ronda.obs.trim() !== "") {
+                doc.setFont(undefined, "normal");
+                const obsLines = doc.splitTextToSize(`Obs: ${ronda.obs}`, 165);
+                doc.text(obsLines, margin + 8, y);
+                y += obsLines.length * 5 + 4;
             }
         });
-        doc.save("Relatorio_Plantao_Sentinela.pdf");
+
+        // Rodapé
+        y = 275;
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+
+        if (perfil.nome) {
+            doc.text("_______________________________________________", margin, y);
+            y += 8;
+            doc.text(perfil.nome.toUpperCase(), margin, y);
+            
+            if (perfil.cargo) {
+                y += 6;
+                doc.text(perfil.cargo.toUpperCase(), margin, y);
+            }
+        }
+
+        if (perfil.empresa || perfil.cnpj) {
+            y += 12;
+            const rodapeEmpresa = `${perfil.empresa || ''} ${perfil.cnpj ? '- CNPJ: ' + perfil.cnpj : ''}`.trim();
+            doc.text(rodapeEmpresa, pageWidth / 2, y, { align: "center" });
+        }
+
+        // Salvar PDF
+        const nomeArquivo = `Relatorio_Plantao_${new Date().toISOString().slice(0,10)}.pdf`;
+        doc.save(nomeArquivo);
+        
+        alert("Relatório de plantão gerado com sucesso!");
     }
 
-    // ==================== LOG DE RONDAS COM BOTÃO GERAR CARD ====================
     function renderRondas() {
         const container = document.getElementById('historico-rondas');
         container.innerHTML = '';
@@ -504,13 +619,11 @@
         });
     }
 
-    // Função auxiliar para gerar card a partir do histórico
     function gerarPDFCardFromHistory(index) {
         const ronda = db.rondas[index];
         if (ronda) gerarPDFCard(ronda);
     }
 
-    // ==================== BASE DE POSTOS COM BOTÃO ROTA ====================
     function renderPostos() {
         const filtro = document.getElementById('busca-posto').value.toLowerCase().trim();
         const container = document.getElementById('lista-postos');
@@ -546,13 +659,8 @@
 
     function abrirRota(nomePosto) {
         const endereco = encodeURIComponent(nomePosto + ", Porto Alegre, RS");
-        // Tenta abrir no Waze primeiro (melhor para viaturas), senão Google Maps
         const wazeUrl = `https://waze.com/ul?ll=0,0&navigate=yes&q=${endereco}`;
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${endereco}`;
-        
-        // Abre Waze se disponível, senão Maps
         window.open(wazeUrl, '_blank');
-        // Alternativa: window.open(mapsUrl, '_blank');
     }
 
     function adicionarPosto() {
@@ -584,7 +692,7 @@
         alert("Perfil salvo com sucesso!");
     }
 
-    function gerenciarIntervalo() { /* mantido igual */ 
+    function gerenciarIntervalo() {
         const btn = document.getElementById('btn-intervalo');
         if (!db.intervaloAtivo) {
             db.intervaloAtivo = new Date().toLocaleString('pt-BR');
