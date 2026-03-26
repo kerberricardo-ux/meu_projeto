@@ -158,7 +158,6 @@
             background: #1e3a5f;
         }
 
-        /* CHECKLIST - CORRIGIDO */
         .checklist-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -188,6 +187,16 @@
             border-color: var(--danger);
             color: var(--danger);
             background: rgba(248, 81, 73, 0.25);
+        }
+
+        .posto-item {
+            background: #1e2a44;
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .nav-bar {
@@ -363,7 +372,9 @@
 
     let fotoBase64 = null;
 
-    function saveDB() { localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); }
+    function saveDB() {
+        localStorage.setItem('sentinela_ops_db', JSON.stringify(db));
+    }
 
     function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
@@ -392,7 +403,7 @@
         if (view === 'postos') renderPostos();
     }
 
-    // Checklist functions
+    // ==================== CHECKLIST ====================
     function toggleCheck(item) {
         item.classList.toggle('ok');
         item.classList.toggle('pendencia');
@@ -403,12 +414,274 @@
         document.getElementById('sec-fiscalizacao').style.display = (motivo === 'Fiscalização') ? 'block' : 'none';
     }
 
-    // Demais funções (salvarRonda, gerarPDFCard, gerarRelatorioPlantao, renderRondas, etc.) permanecem iguais à versão anterior.
+    // ==================== FOTO ====================
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fotoBase64 = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-    // Para não repetir todo o código novamente, cole as funções restantes da versão anterior (salvarRonda, gerarPDFCard, gerarRelatorioPlantao, renderRondas, etc.) aqui.
+    // ==================== SALVAR RONDA + GERAR CARD ====================
+    function salvarRonda() {
+        const placa = document.getElementById('r-placa').value;
+        const km = document.getElementById('r-km').value;
+        const posto = document.getElementById('r-posto').value.trim();
+        const funcionario = document.getElementById('r-func').value;
+        const motivo = document.getElementById('r-motivo').value;
+        const obs = document.getElementById('r-obs').value.trim();
 
-    // Inicialização
-    window.onload = () => showView('home');
+        if (!posto) {
+            alert("Informe o Posto / Local!");
+            return;
+        }
+
+        const novaRonda = {
+            data: new Date().toLocaleString('pt-BR'),
+            placa: placa,
+            km: km,
+            posto: posto,
+            funcionario: funcionario,
+            motivo: motivo,
+            obs: obs,
+            foto: fotoBase64
+        };
+
+        db.rondas.unshift(novaRonda); // mais recente primeiro
+        saveDB();
+        renderRondas();
+
+        gerarPDFCard(novaRonda); // gera o card em PDF
+
+        // limpar formulário
+        document.getElementById('r-km').value = '';
+        document.getElementById('r-posto').value = '';
+        document.getElementById('r-obs').value = '';
+        document.getElementById('r-foto').value = '';
+        fotoBase64 = null;
+    }
+
+    function gerarPDFCard(ronda) {
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
+
+        doc.setFontSize(20);
+        doc.text("CARD DE RONDA - SENTINELA OPS", 105, 20, { align: "center" });
+
+        doc.setFontSize(12);
+        doc.text(`Data/Hora: ${ronda.data}`, 20, 40);
+        doc.text(`Viatura: ${ronda.placa || '—'}`, 20, 50);
+        doc.text(`KM: ${ronda.km || '—'}`, 20, 60);
+        doc.text(`Posto/Local: ${ronda.posto}`, 20, 70);
+        doc.text(`Colaborador: ${ronda.funcionario || '—'}`, 20, 80);
+        doc.text(`Atividade: ${ronda.motivo}`, 20, 90);
+
+        if (ronda.obs) {
+            doc.text("Observações:", 20, 105);
+            const splitObs = doc.splitTextToSize(ronda.obs, 170);
+            doc.text(splitObs, 20, 115);
+        }
+
+        if (ronda.foto) {
+            doc.addImage(ronda.foto, 'JPEG', 20, 140, 170, 100);
+        }
+
+        // QR Code simples com dados básicos
+        const qrcodeDiv = document.createElement("div");
+        new QRCode(qrcodeDiv, {
+            text: `Ronda ${ronda.data} - ${ronda.posto}`,
+            width: 128,
+            height: 128
+        });
+        const qrImg = qrcodeDiv.querySelector("img");
+        if (qrImg) {
+            doc.addImage(qrImg.src, 'PNG', 80, 250, 50, 50);
+        }
+
+        doc.save(`Ronda_${ronda.posto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    }
+
+    // ==================== RELATÓRIO DE PLANTÃO ====================
+    function gerarRelatorioPlantao() {
+        if (db.rondas.length === 0) {
+            alert("Não há rondas registradas para gerar o relatório.");
+            return;
+        }
+
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
+
+        doc.setFontSize(18);
+        doc.text("RELATÓRIO DE PLANTÃO - SENTINELA OPS", 105, 20, { align: "center" });
+
+        doc.setFontSize(11);
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 35);
+
+        let y = 50;
+
+        db.rondas.forEach((r, i) => {
+            if (y > 250) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFontSize(12);
+            doc.text(`${i+1}. ${r.data} - ${r.posto}`, 20, y);
+            y += 8;
+            doc.setFontSize(10);
+            doc.text(`Viatura: ${r.placa || '—'} | KM: ${r.km || '—'} | Atividade: ${r.motivo}`, 25, y);
+            y += 8;
+
+            if (r.obs) {
+                const obsLines = doc.splitTextToSize(`Obs: ${r.obs}`, 160);
+                doc.text(obsLines, 25, y);
+                y += obsLines.length * 6;
+            }
+            y += 10;
+        });
+
+        doc.save("Relatorio_Plantao_Sentinela.pdf");
+    }
+
+    // ==================== HISTÓRICO DE RONDAS ====================
+    function renderRondas() {
+        const container = document.getElementById('historico-rondas');
+        container.innerHTML = '';
+
+        if (db.rondas.length === 0) {
+            container.innerHTML = '<p style="color:#64748b; text-align:center; padding:20px;">Nenhuma ronda registrada ainda.</p>';
+            return;
+        }
+
+        db.rondas.forEach(ronda => {
+            const div = document.createElement('div');
+            div.className = 'ronda-entry';
+            div.innerHTML = `
+                <div>
+                    <strong>${ronda.posto}</strong><br>
+                    <small>${ronda.data} • ${ronda.motivo}</small>
+                </div>
+                <div style="text-align:right; font-size:0.8rem;">
+                    ${ronda.km ? 'KM ' + ronda.km : ''}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // ==================== POSTOS ====================
+    function renderPostos() {
+        const filtro = document.getElementById('busca-posto').value.toLowerCase().trim();
+        const container = document.getElementById('lista-postos');
+        container.innerHTML = '';
+
+        const filtrados = db.postos.filter(p => 
+            p.nome.toLowerCase().includes(filtro)
+        );
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<p style="color:#64748b; text-align:center;">Nenhum posto encontrado.</p>';
+            return;
+        }
+
+        filtrados.forEach((posto, index) => {
+            const div = document.createElement('div');
+            div.className = 'posto-item';
+            div.innerHTML = `
+                <span>${posto.nome}</span>
+                <button class="btn btn-danger btn-small" onclick="excluirPosto(${index})">🗑️</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function adicionarPosto() {
+        const nome = prompt("Nome do novo posto:");
+        if (!nome || !nome.trim()) return;
+
+        db.postos.push({ nome: nome.trim() });
+        saveDB();
+        renderPostos();
+    }
+
+    function excluirPosto(indexGlobal) {
+        // indexGlobal é o índice no array filtrado? Não → precisamos pegar pelo nome ou usar outro jeito.
+        // Melhor solução: usar o índice real do array db.postos
+        if (confirm("Excluir este posto permanentemente?")) {
+            // Como renderizamos filtrado, vamos buscar pelo nome (mais simples)
+            const nome = document.querySelectorAll('.posto-item span')[indexGlobal] ? 
+                         document.querySelectorAll('.posto-item span')[indexGlobal].textContent : null;
+
+            if (nome) {
+                db.postos = db.postos.filter(p => p.nome !== nome);
+                saveDB();
+                renderPostos();
+            }
+        }
+    }
+
+    // ==================== PERFIL ====================
+    function salvarPerfil() {
+        db.perfil = {
+            nome: document.getElementById('p-nome').value.trim(),
+            matricula: document.getElementById('p-matrícula').value.trim(),
+            placa: document.getElementById('p-placa').value.trim().toUpperCase(),
+            cargo: document.getElementById('p-cargo').value.trim(),
+            empresa: document.getElementById('p-empresa').value.trim(),
+            cnpj: document.getElementById('p-cnpj').value.trim()
+        };
+        saveDB();
+        alert("Perfil salvo com sucesso!");
+    }
+
+    // ==================== INTERVALO (simples) ====================
+    function gerenciarIntervalo() {
+        const btn = document.getElementById('btn-intervalo');
+        if (!db.intervaloAtivo) {
+            db.intervaloAtivo = new Date().toLocaleString('pt-BR');
+            btn.textContent = "⏹️ ENCERRAR INTERVALO";
+            btn.style.background = "#f59e0b";
+            alert("Intervalo iniciado!");
+        } else {
+            const fim = new Date().toLocaleString('pt-BR');
+            alert(`Intervalo encerrado!\nInício: ${db.intervaloAtivo}\nFim: ${fim}`);
+            db.intervaloAtivo = null;
+            btn.textContent = "☕ INICIAR INTERVALO / JANTA";
+            btn.style.background = "";
+        }
+        saveDB();
+    }
+
+    function atualizarBotaoIntervalo() {
+        const btn = document.getElementById('btn-intervalo');
+        if (db.intervaloAtivo) {
+            btn.textContent = "⏹️ ENCERRAR INTERVALO";
+            btn.style.background = "#f59e0b";
+        }
+    }
+
+    function zerarPlantao() {
+        if (confirm("Zerar TODAS as rondas do plantão? Esta ação não pode ser desfeita.")) {
+            db.rondas = [];
+            saveDB();
+            renderRondas();
+            alert("Plantão zerado.");
+        }
+    }
+
+    // ==================== INICIALIZAÇÃO ====================
+    window.onload = () => {
+        showView('home');
+    };
 </script>
 </body>
 </html>
