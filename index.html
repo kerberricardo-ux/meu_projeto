@@ -34,7 +34,7 @@
         .brand-section img { width: 90px; margin-bottom: 10px; }
         .brand-section h2 { margin: 0; color: var(--accent); font-size: 1.4rem; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* --- MENU --- */
+        /* --- MENU EM LISTA --- */
         .menu-container { padding: 12px; max-width: 500px; margin: auto; }
         .menu-item {
             background: var(--white); border-radius: 10px; padding: 18px; margin-bottom: 12px;
@@ -62,7 +62,7 @@
         .btn-break { background: var(--info); color: white; border: 1px solid rgba(255,255,255,0.2); }
         .btn-break.active { background: var(--danger); animation: pulse 2s infinite; }
 
-        /* --- NAV BAR --- */
+        /* --- NAV BAR RESTAURADA --- */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); display: flex; border-top: 1px solid var(--accent); padding: 8px 0; z-index: 100; }
         .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
         .nav-item.active { color: var(--accent); }
@@ -105,6 +105,11 @@
         <div class="menu-item" onclick="showView('postos')">
             <div class="menu-icon">📍</div>
             <div class="menu-text"><b>POSTOS</b><span>Visualizar e designar postos</span></div>
+            <div class="arrow">❯</div>
+        </div>
+        <div class="menu-item" onclick="alert('Relatórios em processamento...')">
+            <div class="menu-icon">📋</div>
+            <div class="menu-text"><b>RELATÓRIO DE PLANTÃO</b><span>Gerar e enviar relatórios</span></div>
             <div class="arrow">❯</div>
         </div>
         <div class="menu-item" onclick="showView('config')">
@@ -175,7 +180,7 @@
 <div id="view-postos" class="container hidden">
     <div class="card-ui">
         <h3>📍 BASE DE POSTOS</h3>
-        <input type="text" id="busca-posto" placeholder="Pesquisar..." onkeyup="renderPostos()">
+        <input type="text" id="busca-posto" placeholder="Pesquisar posto..." onkeyup="renderPostos()">
         <div id="lista-postos" style="margin-top: 15px;"></div>
     </div>
 </div>
@@ -196,8 +201,10 @@
 </div>
 
 <nav class="nav-bar">
-    <div class="nav-item active" onclick="showView('home')"><div>🏠</div>HOME</div>
-    <div class="nav-item" onclick="showView('rondas')"><div>📋</div>RONDAS</div>
+    <div class="nav-item active" id="nav-home" onclick="showView('home')"><div>🏠</div>HOME</div>
+    <div class="nav-item" id="nav-rondas" onclick="showView('rondas')"><div>📋</div>RONDAS</div>
+    <div class="nav-item" id="nav-postos" onclick="showView('postos')"><div>📍</div>POSTOS</div>
+    <div class="nav-item" id="nav-config" onclick="showView('config')"><div>⚙️</div>ADMIN</div>
 </nav>
 
 <script>
@@ -208,9 +215,21 @@
     function saveDB() { localStorage.setItem('fortguard_ronda_db', JSON.stringify(db)); }
 
     function showView(view) {
-        document.querySelectorAll('.container, #view-home').forEach(v => v.classList.add('hidden'));
+        ['home', 'rondas', 'perfil', 'postos', 'config'].forEach(v => {
+            const el = document.getElementById('view-' + v);
+            if(el) el.classList.add('hidden');
+        });
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        
         const target = document.getElementById('view-' + view);
         if(target) target.classList.remove('hidden');
+        
+        const navTarget = document.getElementById('nav-' + (view === 'perfil' ? 'home' : view));
+        if(navTarget) navTarget.classList.add('active');
+
+        const titles = { 'home': 'MENU PRINCIPAL', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS', 'config': 'ADMINISTRAÇÃO' };
+        document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
+
         if(view === 'rondas') {
             document.getElementById('r-placa').value = db.perfil.placa || "";
             document.getElementById('r-func').value = db.perfil.nome || "";
@@ -219,7 +238,6 @@
         if(view === 'postos') renderPostos();
     }
 
-    // --- INTERVALO ---
     function gerenciarIntervalo() {
         const agora = new Date();
         if (!db.intervaloAtivo) {
@@ -229,13 +247,10 @@
             const inicio = new Date(db.intervaloAtivo);
             const diffMin = Math.round((agora - inicio) / 60000);
             db.rondas.push({ 
-                id: Date.now(), 
-                isIntervalo: true, 
-                data: agora.toLocaleDateString(), 
+                id: Date.now(), isIntervalo: true, data: agora.toLocaleDateString(), 
                 hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), 
                 horaFim: agora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), 
-                posto: "☕ INTERVALO / JANTA", 
-                duracao: diffMin 
+                posto: "☕ INTERVALO / JANTA", duracao: diffMin 
             });
             db.intervaloAtivo = null;
         }
@@ -263,7 +278,6 @@
             posto: document.getElementById('r-posto').value,
             motivo: document.getElementById('r-motivo').value,
             km: document.getElementById('r-km').value,
-            obs: document.getElementById('r-obs').value,
             data: new Date().toLocaleDateString('pt-BR'),
             hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
             isIntervalo: false
@@ -272,7 +286,7 @@
         gerarPDF(ronda);
     }
 
-    // --- GERAÇÃO DO CARD (ESTILO IMAGEM ENVIADA) ---
+    // --- GERAÇÃO DO CARD FIEL AO PDF ENVIADO ---
     function gerarPDF(ronda) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'mm', format: [100, 230] });
@@ -285,7 +299,7 @@
         
         const qrDiv = document.getElementById("qrcode-container");
         qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: `SENTINELA-${ronda.id}`, width: 100, height: 100 });
+        new QRCode(qrDiv, { text: `ID-${ronda.id}`, width: 100, height: 100 });
 
         setTimeout(() => {
             const qrCanvas = qrDiv.querySelector('canvas');
@@ -313,7 +327,7 @@
             doc.setFont("helvetica", "bold");
             doc.text("OBSERVAÇÕES:", 5, y + 5);
             doc.setFont("helvetica", "normal");
-            const splitObs = doc.splitTextToSize(ronda.obs || "N/A", 85);
+            const splitObs = doc.splitTextToSize(document.getElementById('r-obs').value || "N/A", 85);
             doc.text(splitObs, 5, y + 11);
 
             doc.setFont("helvetica", "bold");
@@ -323,17 +337,22 @@
         }, 500);
     }
 
-    // --- FUNÇÕES DE APOIO ---
     function checkPin() { if(document.getElementById('pin-input').value === "1234") document.getElementById('config-content').classList.remove('hidden'); }
     function toggleFiscalizacao() { document.getElementById('sec-fiscalizacao').style.display = document.getElementById('r-motivo').value === 'Fiscalização' ? 'block' : 'none'; }
     function previewImage(i) { const r = new FileReader(); r.onload = (e) => { fotoBase64 = e.target.result; document.getElementById('preview-foto').src = fotoBase64; document.getElementById('preview-foto').style.display = 'block'; }; r.readAsDataURL(i.files[0]); }
     function salvarPerfil() { db.perfil = { nome: document.getElementById('p-nome').value, placa: document.getElementById('p-placa').value.toUpperCase(), matricula: document.getElementById('p-matrícula').value, empresa: document.getElementById('p-empresa').value, cnpj: document.getElementById('p-cnpj').value }; saveDB(); alert("Salvo!"); }
     function atualizarSelectPostos() { document.getElementById('r-posto').innerHTML = db.postos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join(''); }
+    
     function renderPostos() {
         const busca = document.getElementById('busca-posto').value.toLowerCase();
         const lista = document.getElementById('lista-postos');
-        lista.innerHTML = db.postos.filter(p => p.nome.toLowerCase().includes(busca)).map(p => `<div class="menu-item"><b>${p.nome}</b></div>`).join('');
+        lista.innerHTML = db.postos.filter(p => p.nome.toLowerCase().includes(busca)).map(p => `
+            <div class="menu-item">
+                <div class="menu-text"><b>${p.nome}</b><span>${p.endereco || 'Sem endereço'}</span></div>
+                <button class="btn btn-save" style="width:auto; padding:8px 15px; margin:0;" onclick="window.open('https://www.google.com/maps/search/${p.nome + ' ' + p.endereco}')">MAPA</button>
+            </div>`).join('');
     }
+
     function adicionarPostoManual() {
         const nome = document.getElementById('adm-nome-posto').value;
         if(nome) { db.postos.push({nome: nome, endereco: document.getElementById('adm-end-posto').value}); saveDB(); renderPostos(); alert("Adicionado!"); }
