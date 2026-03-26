@@ -12,167 +12,97 @@
         :root {
             --primary: #0a192f;
             --secondary: #112240;
-            --accent: #ffd600; /* Dourado */
-            --bg: #f4f7f6; /* Fundo claro para destacar os cards */
+            --accent: #ffd600;
+            --bg: #f4f7f6;
             --text-main: #112240;
             --white: #ffffff;
+            --danger: #f85149;
+            --success: #238636;
             --border: #e1e4e8;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --info: #007bff;
         }
         
-        body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            color: var(--text-main); 
-            padding-bottom: 80px; 
-        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text-main); padding-bottom: 80px; }
 
-        /* --- HEADER ESTILO APP --- */
-        .top-bar {
-            background: var(--primary);
-            color: var(--white);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .top-bar h1 { 
-            margin: 0; 
-            font-size: 1rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            color: var(--accent);
-            flex-grow: 1;
-            text-align: center;
-        }
+        /* --- HEADER --- */
+        .header { background: var(--primary); color: var(--white); padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .header h1 { margin: 0; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; flex-grow: 1; text-align: center; }
+        .status-dot { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 8px #2ea043; }
 
-        /* --- LOGO CENTRAL --- */
-        .brand-section {
-            background: var(--white);
-            text-align: center;
-            padding: 30px 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        .brand-section img {
-            width: 100px;
-            margin-bottom: 10px;
-        }
-        .brand-section h2 {
-            margin: 0;
-            color: var(--accent);
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+        /* --- SEÇÃO DE LOGO (ESTILO IMAGEM) --- */
+        .brand-section { background: var(--white); text-align: center; padding: 25px 10px; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+        .brand-section img { width: 90px; margin-bottom: 10px; }
+        .brand-section h2 { margin: 0; color: var(--accent); font-size: 1.4rem; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* --- MENU EM LISTA (ESTILO IMAGEM) --- */
-        .menu-container {
-            padding: 15px;
-            max-width: 500px;
-            margin: auto;
-        }
-
+        /* --- CENTRAL DE MENUS (LISTA VERTICAL) --- */
+        .menu-container { padding: 12px; max-width: 500px; margin: auto; }
+        
         .menu-item {
             background: var(--white);
-            border-radius: 12px;
-            padding: 15px 20px;
+            border-radius: 10px;
+            padding: 18px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
-            text-decoration: none;
-            color: inherit;
-            box-shadow: var(--shadow);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid var(--border);
-            transition: transform 0.2s;
             cursor: pointer;
+            transition: transform 0.1s;
         }
+        .menu-item:active { transform: scale(0.97); background: #f9f9f9; }
+        
+        .menu-icon { font-size: 1.8rem; width: 55px; height: 55px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; border: 1px solid #eee; }
+        
+        .menu-text { flex-grow: 1; }
+        .menu-text b { display: block; font-size: 1.05rem; text-transform: uppercase; color: var(--primary); }
+        .menu-text span { font-size: 0.8rem; color: #666; }
+        
+        .arrow { color: #ccc; font-weight: bold; font-size: 1.1rem; }
 
-        .menu-item:active {
-            transform: scale(0.98);
-            background: #f0f0f0;
-        }
+        /* --- DEMAIS CARDS E CONTAINERS --- */
+        .container { padding: 12px; max-width: 600px; margin: auto; }
+        .card-ui { background: var(--white); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); color: var(--primary); }
+        .card-ui h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 8px; font-size: 0.85rem; text-transform: uppercase; }
+        
+        label { display: block; margin-top: 10px; font-weight: 600; font-size: 0.7rem; color: #555; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; background: #fff; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 1rem; color: var(--primary); }
+        
+        .btn { border: none; padding: 14px; border-radius: 6px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; transition: 0.3s; }
+        .btn-save { background: var(--primary); color: var(--accent); }
+        .btn-delete { background: #444; color: white; }
+        .btn-card { background: var(--primary); color: white; }
+        .btn-break { background: var(--info); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-break.active { background: var(--danger); animation: pulse 2s infinite; }
 
-        .menu-icon {
-            font-size: 1.8rem;
-            width: 50px;
-            height: 50px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            border: 1px solid #eee;
-        }
-
-        .menu-text {
-            flex-grow: 1;
-        }
-
-        .menu-text b {
-            display: block;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
-
-        .menu-text span {
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        .arrow {
-            color: #ccc;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        /* --- NAVEGAÇÃO INFERIOR --- */
-        .nav-bar { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            background: var(--primary); 
-            display: flex; 
-            border-top: 1px solid var(--accent); 
-            padding: 8px 0; 
-            z-index: 100; 
-        }
-        .nav-item { 
-            cursor: pointer; 
-            text-align: center; 
-            font-size: 0.65rem; 
-            flex: 1; 
-            color: #8b949e; 
-            text-transform: uppercase; 
-            font-weight: bold; 
-        }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); display: flex; border-top: 1px solid var(--accent); padding: 8px 0; z-index: 100; }
+        .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
         .nav-item.active { color: var(--accent); }
-        .nav-item div { font-size: 1.3rem; margin-bottom: 2px; }
-
+        .nav-item div { font-size: 1.2rem; margin-bottom: 2px; }
+        
         .hidden { display: none !important; }
-        .container { padding: 15px; }
+        .viatura-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px dashed var(--primary); }
+        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .check-item { background: #f1f3f5; padding: 12px; border-radius: 6px; text-align: center; cursor: pointer; border: 1px solid var(--border); font-size: 0.7rem; font-weight: bold; color: var(--primary); }
+        .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.05); }
+        .check-item.pendencia { border-color: var(--danger); color: var(--danger); background: rgba(248, 81, 73, 0.05); }
+        .ronda-entry { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; margin-bottom: 5px; border-radius: 6px; }
 
-        /* Estilos para as outras telas (Rondas, Postos, etc) - Mantidos do seu original */
-        .card-ui { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .btn-save { background: var(--primary); color: var(--accent); width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; margin-top: 10px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <div onclick="showView('home')" style="cursor:pointer">←</div>
+<div id="qrcode-container"></div>
+
+<div class="header">
+    <div onclick="showView('home')" style="cursor:pointer; font-size: 1.2rem;">←</div>
     <h1>MENU PRINCIPAL</h1>
-    <div>🔔</div>
+    <div class="status-dot"></div>
 </div>
 
 <div id="view-home">
     <div class="brand-section">
-        <img src="https://cdn-icons-png.flaticon.com/512/5164/5164023.png" alt="Logo Sentinela">
+        <img src="https://cdn-icons-png.flaticon.com/512/5164/5164023.png" alt="Logo">
         <h2>SENTINELA OPS</h2>
     </div>
 
@@ -195,7 +125,7 @@
             <div class="arrow">❯</div>
         </div>
 
-        <div class="menu-item" onclick="alert('Funcionalidade em desenvolvimento')">
+        <div class="menu-item" onclick="alert('Relatórios em processamento...')">
             <div class="menu-icon">📋</div>
             <div class="menu-text">
                 <b>RELATÓRIO DE PLANTÃO</b>
@@ -227,49 +157,163 @@
 <div id="view-rondas" class="container hidden">
     <div class="card-ui">
         <h3>📋 REGISTRO OPERACIONAL</h3>
-        <p>Interface de rondas aqui...</p>
-        <button class="btn-save" onclick="showView('home')">Voltar ao Menu</button>
+        <button id="btn-intervalo" class="btn btn-break" onclick="gerenciarIntervalo()">☕ INICIAR INTERVALO / JANTA</button>
+        <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+        <div class="viatura-inputs">
+            <div><label>VTR:</label><input type="text" id="r-placa" readonly></div>
+            <div><label>KM:</label><input type="number" id="r-km"></div>
+        </div>
+        <label>Posto Alvo:</label> <select id="r-posto"></select>
+        <label>Colaborador:</label> <input type="text" id="r-func">
+        <label>Missão:</label> 
+        <select id="r-motivo" onchange="toggleFiscalizacao()">
+            <option value="Fiscalização">Fiscalização</option>
+            <option value="Deslocamento">Deslocamento</option>
+        </select>
+        <div id="sec-fiscalizacao">
+            <label>CHECKLIST TÁTICO:</label>
+            <div class="checklist-grid" id="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">APRESENTAÇÃO</div>
+                <div class="check-item" onclick="toggleCheck(this)">UNIFORME</div>
+                <div class="check-item" onclick="toggleCheck(this)">POSTURA</div>
+                <div class="check-item" onclick="toggleCheck(this)">LIVRO OCOR.</div>
+                <div class="check-item" onclick="toggleCheck(this)">MATERIAL</div>
+                <div class="check-item" onclick="toggleCheck(this)">OUTROS</div>
+            </div>
+        </div>
+        <label>Notas:</label> <textarea id="r-obs" rows="2"></textarea>
+        <label>Foto:</label> <input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
+        <img id="preview-foto" src="#">
+        <button class="btn btn-save" onclick="salvarRonda()">FINALIZAR REGISTRO</button>
+    </div>
+
+    <div class="card-ui">
+        <h3>📊 LOG DE ATIVIDADES</h3>
+        <p style="font-size:0.7rem">TOTAL DE VISITAS: <span id="qtd-rondas">0</span></p>
+        <button class="btn btn-delete" onclick="zerarRondas()" style="font-size:0.7rem">ZERAR PLANTÃO</button>
+        <div id="historico-rondas" style="margin-top:10px"></div>
     </div>
 </div>
 
 <div id="view-perfil" class="container hidden">
     <div class="card-ui">
-        <h3>👤 MEU PERFIL</h3>
-        <p>Dados do Ricardo Kerber...</p>
-        <button class="btn-save" onclick="showView('home')">Voltar ao Menu</button>
+        <h3>👤 IDENTIFICAÇÃO</h3>
+        <label>Nome:</label> <input type="text" id="p-nome">
+        <label>Matrícula:</label> <input type="number" id="p-matrícula">
+        <label>Placa VTR:</label> <input type="text" id="p-placa" placeholder="ABC-1234">
+        <label>Empresa:</label> <input type="text" id="p-empresa">
+        <label>CNPJ:</label> <input type="text" id="p-cnpj">
+        <button class="btn btn-save" onclick="salvarPerfil()">GRAVAR DADOS</button>
+    </div>
+</div>
+
+<div id="view-postos" class="container hidden">
+    <div class="card-ui">
+        <h3>📍 BASE DE POSTOS</h3>
+        <input type="text" id="busca-posto" placeholder="Pesquisar..." onkeyup="renderPostos()">
+        <div id="lista-postos" style="margin-top: 15px;"></div>
+    </div>
+</div>
+
+<div id="view-config" class="container hidden">
+    <div class="card-ui">
+        <h3>⚙️ ADMIN (PIN 1234)</h3>
+        <div id="lock-screen">
+            <input type="password" id="pin-input" placeholder="PIN">
+            <button class="btn btn-save" onclick="checkPin()">ENTRAR</button>
+        </div>
+        <div id="config-content" class="hidden">
+            <label>Nome Posto:</label><input type="text" id="adm-nome-posto">
+            <label>Endereço:</label><input type="text" id="adm-end-posto">
+            <button class="btn btn-save" onclick="adicionarPostoManual()">ADICIONAR</button>
+        </div>
     </div>
 </div>
 
 <nav class="nav-bar">
-    <div class="nav-item active" onclick="showView('home')"><div>🏠</div>Home</div>
-    <div class="nav-item" onclick="showView('rondas')"><div>🛡️</div>Rondas</div>
-    <div class="nav-item"><div>🔔</div>Alertas</div>
-    <div class="nav-item" onclick="showView('perfil')"><div>👤</div>Perfil</div>
+    <div class="nav-item active" id="nav-home" onclick="showView('home')"><div>🏠</div>HOME</div>
+    <div class="nav-item" id="nav-rondas" onclick="showView('rondas')"><div>📋</div>RONDAS</div>
+    <div class="nav-item" id="nav-postos" onclick="showView('postos')"><div>📍</div>POSTOS</div>
+    <div class="nav-item" id="nav-config" onclick="showView('config')"><div>⚙️</div>ADMIN</div>
 </nav>
 
 <script>
+    const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA"];
+    let db = JSON.parse(localStorage.getItem('fortguard_ronda_db')) || { perfil: {}, postos: postosIniciais.map(n => ({nome:n, endereco:"", telefone:""})), rondas: [], intervaloAtivo: null };
+    let fotoBase64 = "";
+
+    function saveDB() { localStorage.setItem('fortguard_ronda_db', JSON.stringify(db)); }
+
     function showView(view) {
-        // Esconde todas as telas
         document.getElementById('view-home').classList.add('hidden');
         document.getElementById('view-rondas').classList.add('hidden');
         document.getElementById('view-perfil').classList.add('hidden');
-        // Adicione as outras conforme necessário
+        document.getElementById('view-postos').classList.add('hidden');
+        document.getElementById('view-config').classList.add('hidden');
+        
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        
+        document.getElementById('view-' + view).classList.remove('hidden');
+        if(document.getElementById('nav-' + view)) document.getElementById('nav-' + view).classList.add('active');
 
-        // Mostra a selecionada
-        const target = document.getElementById('view-' + view);
-        if(target) target.classList.remove('hidden');
+        const titles = { 'home': 'MENU PRINCIPAL', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS', 'config': 'ADMINISTRAÇÃO' };
+        document.querySelector('.header h1').innerText = titles[view] || 'FORTGUARD OPS';
 
-        // Atualiza título da barra superior
-        const titles = {
-            'home': 'MENU PRINCIPAL',
-            'rondas': 'NOVA RONDA',
-            'perfil': 'INFORMAÇÕES DO USUÁRIO',
-            'postos': 'BASE DE POSTOS',
-            'config': 'CONFIGURAÇÕES'
-        };
-        document.querySelector('.top-bar h1').innerText = titles[view] || 'SENTINELA OPS';
+        if(view === 'rondas') {
+            document.getElementById('r-placa').value = db.perfil.placa || "";
+            atualizarSelectPostos();
+            renderRondas();
+            atualizarBotaoIntervalo();
+        }
+        if(view === 'postos') renderPostos();
     }
-</script>
 
+    // --- LÓGICA DE INTERVALO ---
+    function gerenciarIntervalo() {
+        const agora = new Date();
+        if (!db.intervaloAtivo) {
+            db.intervaloAtivo = agora.getTime();
+            alert("Intervalo iniciado!");
+        } else {
+            const inicio = new Date(db.intervaloAtivo);
+            const diffMin = Math.round((agora - inicio) / 60000);
+            db.rondas.push({ id: Date.now(), isIntervalo: true, data: agora.toLocaleDateString(), hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), horaFim: agora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), posto: "☕ INTERVALO", duracao: diffMin });
+            db.intervaloAtivo = null;
+            alert("Intervalo finalizado: " + diffMin + " min.");
+        }
+        saveDB(); atualizarBotaoIntervalo(); renderRondas();
+    }
+
+    function atualizarBotaoIntervalo() {
+        const btn = document.getElementById('btn-intervalo');
+        if (db.intervaloAtivo) { btn.innerText = "🛑 FINALIZAR INTERVALO"; btn.classList.add('active'); }
+        else { btn.innerText = "☕ INICIAR INTERVALO / JANTA"; btn.classList.remove('active'); }
+    }
+
+    function renderRondas() {
+        document.getElementById('qtd-rondas').innerText = db.rondas.filter(r => !r.isIntervalo).length;
+        document.getElementById('historico-rondas').innerHTML = db.rondas.slice().reverse().map(r => `
+            <div class="ronda-entry ${r.isIntervalo ? 'entry-break' : ''}">
+                <div style="font-size:0.7rem"><strong>${r.hora}</strong> - ${r.posto} ${r.duracao ? '('+r.duracao+'m)' : ''}</div>
+            </div>`).join('');
+    }
+
+    // Funções auxiliares mantidas
+    function checkPin() { if(document.getElementById('pin-input').value === "1234") document.getElementById('config-content').classList.remove('hidden'); }
+    function toggleCheck(e) { e.classList.toggle('ok'); }
+    function toggleFiscalizacao() { document.getElementById('sec-fiscalizacao').classList.toggle('hidden', document.getElementById('r-motivo').value === "Deslocamento"); }
+    function previewImage(input) { const reader = new FileReader(); reader.onload = (e) => { fotoBase64 = e.target.result; document.getElementById('preview-foto').src = fotoBase64; document.getElementById('preview-foto').style.display = "block"; }; if(input.files[0]) reader.readAsDataURL(input.files[0]); }
+    function salvarPerfil() { db.perfil = { nome: document.getElementById('p-nome').value, placa: document.getElementById('p-placa').value.toUpperCase(), empresa: document.getElementById('p-empresa').value, cnpj: document.getElementById('p-cnpj').value, matricula: document.getElementById('p-matrícula').value }; saveDB(); alert("Salvo!"); }
+    function atualizarSelectPostos() { document.getElementById('r-posto').innerHTML = db.postos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join(''); }
+    
+    window.onload = () => {
+        if(db.perfil.nome) {
+            document.getElementById('p-nome').value = db.perfil.nome;
+            document.getElementById('p-placa').value = db.perfil.placa;
+            document.getElementById('p-empresa').value = db.perfil.empresa;
+        }
+        showView('home');
+    };
+</script>
 </body>
 </html>
