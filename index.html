@@ -24,17 +24,14 @@
         
         body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text-main); padding-bottom: 80px; }
 
-        /* --- HEADER --- */
         .header { background: var(--primary); color: var(--white); padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .header h1 { margin: 0; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; flex-grow: 1; text-align: center; }
         .status-dot { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 8px #2ea043; }
 
-        /* --- LOGO CENTRAL --- */
         .brand-section { background: var(--white); text-align: center; padding: 25px 10px; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
         .brand-section img { width: 90px; margin-bottom: 10px; }
         .brand-section h2 { margin: 0; color: var(--accent); font-size: 1.4rem; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* --- MENU --- */
         .menu-container { padding: 12px; max-width: 500px; margin: auto; }
         .menu-item {
             background: var(--white); border-radius: 10px; padding: 18px; margin-bottom: 12px;
@@ -48,21 +45,18 @@
         .menu-text span { font-size: 0.8rem; color: #666; }
         .arrow { color: #ccc; font-weight: bold; font-size: 1.1rem; }
 
-        /* --- CONTAINERS --- */
         .container { padding: 12px; max-width: 600px; margin: auto; }
         .card-ui { background: var(--white); border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); color: var(--primary); }
         .card-ui h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 8px; font-size: 0.85rem; text-transform: uppercase; }
         label { display: block; margin-top: 10px; font-weight: 600; font-size: 0.7rem; color: #555; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; background: #fff; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 1rem; color: var(--primary); }
         
-        /* --- BOTÕES --- */
         .btn { border: none; padding: 14px; border-radius: 6px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; transition: 0.3s; }
         .btn-save { background: var(--primary); color: var(--accent); }
         .btn-delete { background: #444; color: white; }
         .btn-break { background: var(--info); color: white; border: 1px solid rgba(255,255,255,0.2); }
         .btn-break.active { background: var(--danger); animation: pulse 2s infinite; }
 
-        /* --- NAV BAR --- */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); display: flex; border-top: 1px solid var(--accent); padding: 8px 0; z-index: 100; }
         .nav-item { cursor: pointer; text-align: center; font-size: 0.65rem; flex: 1; color: #8b949e; text-transform: uppercase; font-weight: bold; }
         .nav-item.active { color: var(--accent); }
@@ -74,7 +68,6 @@
         .check-item { background: #f1f3f5; padding: 12px; border-radius: 6px; text-align: center; cursor: pointer; border: 1px solid var(--border); font-size: 0.7rem; font-weight: bold; color: var(--primary); }
         .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.05); }
         .check-item.pendencia { border-color: var(--danger); color: var(--danger); background: rgba(248, 81, 73, 0.05); }
-        
         .ronda-entry { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; margin-bottom: 5px; border-radius: 6px; }
         .entry-break { border-left: 6px solid var(--info); background: #f0f7ff; }
 
@@ -96,6 +89,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/5164/5164023.png" alt="Logo Sentinela">
         <h2>SENTINELA OPS</h2>
     </div>
+
     <div class="menu-container">
         <div class="menu-item" onclick="showView('rondas')">
             <div class="menu-icon">🛡️</div>
@@ -154,6 +148,7 @@
         <img id="preview-foto" src="#" style="display:none; width:100%; margin-top:10px; border-radius:5px;">
         <button class="btn btn-save" onclick="salvarRonda()">FINALIZAR E GERAR CARD</button>
     </div>
+
     <div class="card-ui">
         <h3>📊 LOG DE ATIVIDADES</h3>
         <div id="historico-rondas"></div>
@@ -165,8 +160,31 @@
         <h3>👤 IDENTIFICAÇÃO</h3>
         <label>Nome:</label> <input type="text" id="p-nome">
         <label>Matrícula:</label> <input type="number" id="p-matrícula">
-        <label>Placa VTR:</label> <input type="text" id="p-placa">
-        <button class="btn btn-save" onclick="salvarPerfil()">SALVAR</button>
+        <label>Placa VTR:</label> <input type="text" id="p-placa" placeholder="ABC-1234">
+        <button class="btn btn-save" onclick="salvarPerfil()">GRAVAR DADOS</button>
+    </div>
+</div>
+
+<div id="view-postos" class="container hidden">
+    <div class="card-ui">
+        <h3>📍 BASE DE POSTOS</h3>
+        <input type="text" id="busca-posto" placeholder="Pesquisar..." onkeyup="renderPostos()">
+        <div id="lista-postos" style="margin-top: 15px;"></div>
+    </div>
+</div>
+
+<div id="view-config" class="container hidden">
+    <div class="card-ui">
+        <h3>⚙️ ADMIN (PIN 1234)</h3>
+        <div id="lock-screen">
+            <input type="password" id="pin-input" placeholder="PIN">
+            <button class="btn btn-save" onclick="checkPin()">ENTRAR</button>
+        </div>
+        <div id="config-content" class="hidden">
+            <label>Nome Posto:</label><input type="text" id="adm-nome-posto">
+            <label>Endereço:</label><input type="text" id="adm-end-posto">
+            <button class="btn btn-save" onclick="adicionarPostoManual()">ADICIONAR</button>
+        </div>
     </div>
 </div>
 
@@ -176,10 +194,11 @@
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('sentinela_db')) || { perfil: {}, postos: [{nome: "COND SOLAR SEVILHA"}], rondas: [], intervaloAtivo: null };
+    const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"];
+    let db = JSON.parse(localStorage.getItem('fortguard_ronda_db')) || { perfil: {}, postos: postosIniciais.map(n => ({nome:n, endereco:"", telefone:""})), rondas: [], intervaloAtivo: null };
     let fotoBase64 = "";
 
-    function saveDB() { localStorage.setItem('sentinela_db', JSON.stringify(db)); }
+    function saveDB() { localStorage.setItem('fortguard_ronda_db', JSON.stringify(db)); }
 
     function showView(view) {
         document.querySelectorAll('.container, #view-home').forEach(v => v.classList.add('hidden'));
@@ -190,6 +209,7 @@
             document.getElementById('r-func').value = db.perfil.nome || "";
             atualizarSelectPostos(); renderRondas(); atualizarBotaoIntervalo();
         }
+        if(view === 'postos') renderPostos();
     }
 
     function gerenciarIntervalo() {
@@ -200,7 +220,15 @@
         } else {
             const inicio = new Date(db.intervaloAtivo);
             const diffMin = Math.round((agora - inicio) / 60000);
-            db.rondas.push({ isIntervalo: true, hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), horaFim: agora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), posto: "☕ INTERVALO / JANTA", duracao: diffMin });
+            db.rondas.push({ 
+                id: Date.now(), 
+                isIntervalo: true, 
+                data: agora.toLocaleDateString(), 
+                hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), 
+                horaFim: agora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), 
+                posto: "☕ INTERVALO / JANTA", 
+                duracao: diffMin 
+            });
             db.intervaloAtivo = null;
         }
         saveDB(); renderRondas(); atualizarBotaoIntervalo();
@@ -227,7 +255,6 @@
             posto: document.getElementById('r-posto').value,
             motivo: document.getElementById('r-motivo').value,
             km: document.getElementById('r-km').value,
-            obs: document.getElementById('r-obs').value,
             data: new Date().toLocaleDateString('pt-BR'),
             hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
             isIntervalo: false
@@ -236,61 +263,71 @@
         gerarPDF(ronda);
     }
 
-    // --- GERAÇÃO DO CARD IGUAL AO MODELO ---
+    // --- FUNÇÃO DO CARD CORRIGIDA (PADRÃO IMAGEM ENVIADA) ---
     function gerarPDF(ronda) {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: [100, 230] });
+        const doc = new jsPDF({ unit: 'mm', format: [100, 225] }); 
 
-        // 1. Foto
-        if(fotoBase64) doc.addImage(fotoBase64, 'JPEG', 5, 5, 90, 65);
+        if (fotoBase64) doc.addImage(fotoBase64, 'JPEG', 5, 5, 90, 65);
 
-        // 2. Cabeçalho e QR Code
         doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
         doc.text("COMPROVANTE DE RONDA", 50, 80, {align: 'center'});
         
         const qrDiv = document.getElementById("qrcode-container");
         qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: `SENTINELA-${ronda.id}`, width: 100, height: 100 });
-
+        new QRCode(qrDiv, { text: `ID-${ronda.id}`, width: 100, height: 100 });
+        
         setTimeout(() => {
             const qrCanvas = qrDiv.querySelector('canvas');
-            if(qrCanvas) doc.addImage(qrCanvas.toDataURL("image/png"), 'PNG', 70, 85, 25, 25);
+            if (qrCanvas) doc.addImage(qrCanvas.toDataURL("image/png"), 'PNG', 70, 85, 22, 22);
 
-            // 3. Dados (Layout do Card Enviado)
             doc.setFontSize(10);
-            doc.text(ronda.posto, 5, 90);
+            doc.text(ronda.posto.toUpperCase(), 5, 90); 
             doc.setFont("helvetica", "normal");
             doc.setFontSize(9);
             doc.text(`Data: ${ronda.data} | Hora: ${ronda.hora}`, 5, 96);
-            [span_1](start_span)doc.text(`VTR: ${db.perfil.placa || '---'} | KM: ${ronda.km}`, 5, 102);[span_1](end_span)
-            [span_2](start_span)doc.text(`COLABORADOR: ${db.perfil.nome || '---'} - ${db.perfil.matricula || '000'}`, 5, 108);[span_2](end_span)
+            doc.text(`VTR: ${db.perfil.placa || '---'} | KM: ${ronda.km}`, 5, 102);
+            doc.text(`COLABORADOR: ${db.perfil.nome || '---'} - ${db.perfil.matricula || ''}`, 5, 108);
 
-            // 4. Status Operacional (Checklist)
             doc.setFont("helvetica", "bold");
             doc.text("STATUS OPERACIONAL:", 5, 118);
-            let y = 125;
+            
+            let y = 126;
             document.querySelectorAll('#checklist .check-item').forEach(item => {
                 const status = item.classList.contains('ok') ? "OK" : "PEND";
                 doc.setFont("helvetica", "normal");
-                [span_3](start_span)doc.text(`• ${item.innerText}: ${status}`, 8, y);[span_3](end_span)
+                doc.text(`• ${item.innerText}: ${status}`, 8, y);
                 y += 6;
             });
 
-            // 5. Rodapé
             doc.setFont("helvetica", "bold");
             doc.text("OBSERVAÇÕES:", 5, y + 5);
             doc.setFont("helvetica", "normal");
-            doc.text(doc.splitTextToSize(ronda.obs || "N/A", 85), 5, y + 10);
-            [span_4](start_span)doc.text("SUPERVISOR: Ricardo Kerber", 5, y + 30);[span_4](end_span)
+            const splitObs = doc.splitTextToSize(document.getElementById('r-obs').value || "N/A", 85);
+            doc.text(splitObs, 5, y + 11);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("SUPERVISOR: Ricardo Kerber", 5, y + 35);
 
             doc.save(`Card_${ronda.posto}.pdf`);
         }, 500);
     }
 
+    function checkPin() { if(document.getElementById('pin-input').value === "1234") document.getElementById('config-content').classList.remove('hidden'); }
+    function toggleFiscalizacao() { document.getElementById('sec-fiscalizacao').style.display = document.getElementById('r-motivo').value === 'Fiscalização' ? 'block' : 'none'; }
     function previewImage(i) { const r = new FileReader(); r.onload = (e) => { fotoBase64 = e.target.result; document.getElementById('preview-foto').src = fotoBase64; document.getElementById('preview-foto').style.display = 'block'; }; r.readAsDataURL(i.files[0]); }
     function salvarPerfil() { db.perfil = { nome: document.getElementById('p-nome').value, placa: document.getElementById('p-placa').value.toUpperCase(), matricula: document.getElementById('p-matrícula').value }; saveDB(); alert("Salvo!"); }
     function atualizarSelectPostos() { document.getElementById('r-posto').innerHTML = db.postos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join(''); }
-    function toggleFiscalizacao() { document.getElementById('sec-fiscalizacao').style.display = document.getElementById('r-motivo').value === 'Fiscalização' ? 'block' : 'none'; }
+    function renderPostos() {
+        const busca = document.getElementById('busca-posto').value.toLowerCase();
+        const lista = document.getElementById('lista-postos');
+        lista.innerHTML = db.postos.filter(p => p.nome.toLowerCase().includes(busca)).map(p => `<div class="menu-item"><b>${p.nome}</b></div>`).join('');
+    }
+    function adicionarPostoManual() {
+        const nome = document.getElementById('adm-nome-posto').value;
+        if(nome) { db.postos.push({nome: nome, endereco: document.getElementById('adm-end-posto').value}); saveDB(); renderPostos(); alert("Adicionado!"); }
+    }
 
     window.onload = () => showView('home');
 </script>
