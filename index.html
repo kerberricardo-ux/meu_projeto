@@ -362,18 +362,51 @@
     function renderPostos() {
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
         const lista = document.getElementById('lista-postos');
-        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
+        
+        // Filtra por nome ou endereço
+        const filtrados = db.postos.filter(p => 
+            p.nome.toLowerCase().includes(busca) || 
+            (p.endereco && p.endereco.toLowerCase().includes(busca))
+        );
+
+        if (filtrados.length === 0) {
+            lista.innerHTML = `<p style="text-align:center; color:#888; padding:40px 20px;">Nenhum posto encontrado.</p>`;
+            return;
+        }
+
         lista.innerHTML = filtrados.map((p, i) => `
             <div class="posto-item">
-                <div class="posto-nome">${p.nome}</div>
-                <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">🗑️</button>
+                <div class="posto-nome">
+                    <b>${p.nome}</b><br>
+                    <span style="font-size:0.75rem; color:#94a3b8;">${p.endereco || 'Endereço não informado'}</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco || p.nome)}','_blank')" 
+                            style="background:#238636; color:white; border:none; padding:10px 14px; border-radius:6px; font-size:0.7rem; cursor:pointer; font-weight:bold; width:auto; margin:0;">
+                        ROTA
+                    </button>
+                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small" style="width:auto; margin:0; padding:10px 14px;">
+                        🗑️
+                    </button>
+                </div>
             </div>
         `).join('');
     }
 
     function adicionarPosto() {
-        const nome = prompt("Nome do posto:");
-        if (nome) { db.postos.push({nome: nome.trim().toUpperCase(), endereco: ""}); saveDB(); renderPostos(); }
+        const nome = prompt("Digite o NOME do posto:");
+        if (!nome) return;
+
+        const endereco = prompt("Digite o ENDEREÇO para o GPS:");
+        
+        db.postos.push({ 
+            nome: nome.trim().toUpperCase(), 
+            endereco: endereco ? endereco.trim() : "" 
+        });
+        
+        saveDB();
+        renderPostos();
+        alert("✅ Posto e Endereço salvos!");
     }
 
     function excluirPosto(index) {
