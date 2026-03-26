@@ -577,12 +577,76 @@
         document.querySelectorAll('#checklist .check-item').forEach(item => item.classList.add('ok'));
     }
 
-    function gerarRelatorioPlantao() {
+    async function gerarRelatorioPlantao() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Verifica se há dados no perfil e nas rondas
         if (!db.perfil.nome || db.rondas.length === 0) {
-            alert("⚠️ Cadastre seu perfil e registre pelo menos uma ronda.");
+            alert("⚠️ Preencha seu perfil completo e registre rondas antes de gerar o relatório.");
             return;
         }
-        alert("✅ Relatório de plantão gerado (função mantida)");
+
+        const margemEsq = 15;
+        let y = 20;
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+        
+        // Filtra apenas rondas reais (ignora intervalos no cálculo do total)
+        const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
+        const totalVisitas = rondasEfetivas.length;
+
+        // --- CABEÇALHO CENTRALIZADO ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("RELATÓRIO DE PLANTÃO", 105, y, { align: "center" });
+        
+        y += 15;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`DATA: ${dataHoje}`, margemEsq, y);
+        
+        y += 7;
+        // Puxa Nome, Cargo e Matrícula salvos no seu Perfil
+        const infoColaborador = `${db.perfil.nome.toUpperCase()}, ${db.perfil.cargo.toUpperCase()}, MAT: ${db.perfil.matricula}`;
+        doc.text(infoColaborador, margemEsq, y);
+
+        y += 12;
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL DE VISITAS (${totalVisitas})`, margemEsq, y);
+        
+        y += 8;
+        doc.line(margemEsq, y, 195, y); // Linha divisória
+        y += 10;
+
+        // --- LISTAGEM DAS VISITAS ---
+        doc.setFontSize(8);
+        rondasEfetivas.forEach((r, index) => {
+            if (y > 260) { doc.addPage(); y = 20; } // Cria nova página se encher
+
+            // VALIDAÇÃO: Se a ronda tiver foto salva, coloca "OK"
+            const validacao = r.foto ? "OK" : "N/A";
+            
+            // Monta a linha conforme seu exemplo
+            const textoLinha = `${index + 1}. POSTO: ${r.posto}, HORA: ${r.hora}, COLABORADOR: ${db.perfil.nome}, MOTIVO: ${r.motivo}, VTR: ${db.perfil.placa}, KM: ${r.km}, VALIDAÇÃO: ${validacao}`;
+            
+            // Quebra o texto se for maior que a largura da folha
+            const splitTexto = doc.splitTextToSize(textoLinha, 180);
+            doc.setFont("helvetica", "normal");
+            doc.text(splitTexto, margemEsq, y);
+            
+            y += (splitTexto.length * 7); // Espaço para a próxima visita
+        });
+
+        // --- RODAPÉ CENTRALIZADO (NOME DA EMPRESA E CNPJ) ---
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(db.perfil.empresa.toUpperCase(), 105, 280, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.text(`CNPJ: ${db.perfil.cnpj}`, 105, 287, { align: "center" });
+
+        // SALVA O PDF
+        doc.save(`RELATORIO_PLANTAO_${db.perfil.nome.replace(/\s+/g, '_')}.pdf`);
+        alert("✅ Relatório gerado com sucesso!");
     }
 
     function zerarPlantao() {
