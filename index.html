@@ -155,7 +155,6 @@
             color: #94a3b8;
         }
 
-        /* === POSTOS === */
         #lista-postos .posto-item {
             background: var(--card);
             border: 1px solid #334155;
@@ -293,7 +292,7 @@
         <div class="menu-icon">📄</div>
         <div class="menu-text">
             <b>RELATÓRIO DE PLANTÃO</b>
-            <span>Gerar PDF completo</span>
+            <span>Gerar PDF A4 completo</span>
         </div>
     </div>
 
@@ -401,7 +400,6 @@
     <div class="card">
         <h3>BASE DE POSTOS</h3>
         
-        <!-- Botão Adicionar Posto -->
         <button class="btn btn-primary" onclick="adicionarPosto()" style="margin-bottom: 16px;">
             ➕ ADICIONAR NOVO POSTO
         </button>
@@ -420,6 +418,8 @@
 </nav>
 
 <script>
+    const { jsPDF } = window.jspdf;
+
     const postosIniciais = ["10º TABELIONATO", "COLÉGIO DOM FELICIANO", "COLÉGIO STELLA MARIS", "COND ALPHAVILLE POA", "ZAFFARI - IPANEMA", "COND SOLAR SEVILHA"];
     
     let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { 
@@ -429,7 +429,7 @@
         intervaloAtivo: null 
     };
 
-    let fotoBase64 = "";
+    let fotoBase64 = null;
 
     function saveDB() { 
         localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); 
@@ -511,13 +511,10 @@
     }
 
     function excluirPosto(indexFiltrado) {
-        if (!confirm("Tem certeza que deseja excluir este posto?\n\nEsta ação não pode ser desfeita.")) {
-            return;
-        }
+        if (!confirm("Tem certeza que deseja excluir este posto?\n\nEsta ação não pode ser desfeita.")) return;
 
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
         const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
-        
         const postoParaExcluir = filtrados[indexFiltrado];
         const indiceReal = db.postos.findIndex(p => p.nome === postoParaExcluir.nome);
 
@@ -529,7 +526,18 @@
         }
     }
 
-    // ====================== FUNÇÕES EXISTENTES ======================
+    // ====================== FOTO ======================
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fotoBase64 = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // ====================== SALVAR RONDA + GERAR CARD (EXATAMENTE IGUAL À IMAGEM) ======================
     function salvarRonda() {
         const checklistStatus = {};
         document.querySelectorAll('#checklist .check-item').forEach(item => {
@@ -545,13 +553,14 @@
             hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
             obs: document.getElementById('r-obs').value || 'N/A',
             checklist: checklistStatus,
+            foto: fotoBase64 || '',
             isIntervalo: false
         };
         
         db.rondas.push(ronda);
         saveDB();
         renderRondas();
-        gerarPDF(ronda);
+        gerarPDFCard(ronda);   // ← Card individual (igual à imagem)
 
         // Limpar formulário
         document.getElementById('r-km').value = '';
@@ -560,14 +569,179 @@
         document.getElementById('r-motivo').value = 'Fiscalização';
         toggleFiscalizacao();
         document.querySelectorAll('#checklist .check-item').forEach(item => item.classList.add('ok'));
+        document.getElementById('r-foto').value = '';
+        fotoBase64 = null;
     }
 
+    // ====================== CARD DE RONDA (EXATAMENTE IGUAL À IMAGEM QUE VOCÊ MANDAU) ======================
+    function gerarPDFCard(ronda) {
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const w = doc.internal.pageSize.getWidth();
+        const h = doc.internal.pageSize.getHeight();
+
+        // Fundo azul escuro
+        doc.setFillColor(10, 25, 47);
+        doc.rect(0, 0, w, h, 'F');
+
+        // Cabeçalho amarelo
+        doc.setFillColor(255, 214, 0);
+        doc.rect(0, 0, w, 28, 'F');
+        doc.setFontSize(19);
+        doc.setTextColor(0, 0, 0);
+        doc.text("COMPROVANTE DE RONDA", w / 2, 18, { align: "center" });
+
+        let y = 38;
+
+        // Foto da viatura (se enviada)
+        if (ronda.foto) {
+            doc.addImage(ronda.foto, 'JPEG', 20, y, 170, 92);
+            y += 98;
+        } else {
+            doc.setFillColor(50, 50, 50);
+            doc.rect(20, y, 170, 92, 'F');
+            doc.setFontSize(11);
+            doc.setTextColor(180, 180, 180);
+            doc.text("📸 Foto da Atividade", w / 2, y + 48, { align: "center" });
+            y += 98;
+        }
+
+        // Nome do local (amarelo grande)
+        doc.setFontSize(22);
+        doc.setTextColor(255, 214, 0);
+        doc.text(ronda.posto.toUpperCase(), w / 2, y, { align: "center" });
+        y += 18;
+
+        // Data e Hora
+        doc.setFontSize(13);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`Data: ${ronda.data} | Hora: ${ronda.hora}`, w / 2, y, { align: "center" });
+        y += 12;
+
+        // Viatura e KM
+        const placa = db.perfil.placa || "—";
+        doc.text(`VTR: ${placa} | KM: ${ronda.km}`, w / 2, y, { align: "center" });
+        y += 12;
+
+        // Colaborador
+        const colaborador = `${db.perfil.nome || "Colaborador"} ${db.perfil.matricula ? `- ${db.perfil.matricula}` : ''}`;
+        doc.text(`COLABORADOR: ${colaborador}`, 22, y);
+        y += 14;
+
+        // STATUS OPERACIONAL
+        doc.setFontSize(15);
+        doc.setTextColor(255, 214, 0);
+        doc.text("STATUS OPERACIONAL:", 22, y);
+        y += 10;
+
+        doc.setFontSize(11);
+        const statusItems = Object.keys(ronda.checklist || {});
+        statusItems.forEach((item, i) => {
+            const st = ronda.checklist[item];
+            const statusTxt = st === 'OK' ? 'OK' : 'PEND';
+            const cor = st === 'OK' ? [35, 134, 54] : [248, 81, 73];
+            doc.setTextColor(...cor);
+            doc.text(`• ${item}: ${statusTxt}`, 30, y + (i * 7));
+        });
+        y += statusItems.length * 7 + 12;
+
+        // Observações
+        doc.setFontSize(15);
+        doc.setTextColor(255, 214, 0);
+        doc.text("OBSERVAÇÕES:", 22, y);
+        y += 9;
+
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        const obsLinhas = doc.splitTextToSize(ronda.obs || "N/A", w - 44);
+        doc.text(obsLinhas, 22, y);
+        y += obsLinhas.length * 6 + 15;
+
+        // QR Code
+        const qrContainer = document.createElement('div');
+        qrContainer.style.position = 'absolute';
+        qrContainer.style.left = '-99999px';
+        document.body.appendChild(qrContainer);
+
+        new QRCode(qrContainer, {
+            text: `RONDA-\( {ronda.id}- \){ronda.data}-${ronda.hora}`,
+            width: 130,
+            height: 130,
+            colorDark: "#000000",
+            colorLight: "#ffffff"
+        });
+
+        const canvasQR = qrContainer.querySelector('canvas');
+        if (canvasQR) {
+            const qrBase64 = canvasQR.toDataURL('image/png');
+            doc.addImage(qrBase64, 'PNG', w - 58, h - 68, 48, 48);
+        }
+        document.body.removeChild(qrContainer);
+
+        // Supervisor
+        doc.setFontSize(10);
+        doc.setTextColor(180, 180, 180);
+        doc.text("SUPERVISOR:", 22, h - 22);
+        doc.text("Ricardo Kerber", 22, h - 16);
+
+        // Salvar
+        const nomeArquivo = `Comprovante_Ronda_\( {ronda.posto.replace(/[^a-zA-Z0-9]/g, '_')}_ \){ronda.data}.pdf`;
+        doc.save(nomeArquivo);
+
+        alert(`✅ Card gerado com sucesso!\n\n${ronda.posto} - ${ronda.data} ${ronda.hora}`);
+    }
+
+    // ====================== RELATÓRIO DE PLANTÃO (PDF A4 - DIFERENTE DO CARD) ======================
     function gerarRelatorioPlantao() {
         if (!db.perfil.nome || db.rondas.length === 0) {
             alert("⚠️ Cadastre seu perfil e registre pelo menos uma ronda.");
             return;
         }
-        alert("✅ Relatório de plantão gerado (função mantida)");
+
+        const doc = new jsPDF('p', 'mm', 'a4');
+        let y = 20;
+
+        doc.setFontSize(22);
+        doc.setTextColor(0, 0, 0);
+        doc.text("RELATÓRIO DE PLANTÃO", 105, y, { align: "center" });
+        y += 12;
+
+        doc.setFontSize(12);
+        doc.text(`Colaborador: ${db.perfil.nome || ''} ${db.perfil.matricula ? `- ${db.perfil.matricula}` : ''}`, 20, y);
+        y += 8;
+        doc.text(`Viatura: ${db.perfil.placa || '—'}`, 20, y);
+        y += 8;
+        doc.text(`Data do relatório: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`, 20, y);
+        y += 20;
+
+        doc.setFontSize(15);
+        doc.setTextColor(0, 0, 0);
+        doc.text("LOG DE ATIVIDADES REALIZADAS", 20, y);
+        y += 12;
+
+        db.rondas.forEach(r => {
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFontSize(11);
+            if (r.isIntervalo) {
+                doc.text(`🛑 \( {r.hora} — INTERVALO / JANTA ( \){r.duracao} min)`, 20, y);
+            } else {
+                doc.text(`${r.hora} — ${r.posto} | ${r.motivo} | KM: ${r.km}`, 20, y);
+                y += 7;
+                if (r.obs && r.obs !== 'N/A') {
+                    doc.text(`   Obs: ${r.obs}`, 25, y);
+                }
+            }
+            y += 12;
+        });
+
+        doc.setFontSize(9);
+        doc.text("Relatório gerado automaticamente pelo Sentinela OPS", 105, 287, { align: "center" });
+
+        doc.save(`Relatorio_Plantao_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+        alert("✅ Relatório de plantão gerado com sucesso (PDF A4 baixado)!");
     }
 
     function zerarPlantao() {
@@ -645,17 +819,6 @@
         };
         saveDB();
         alert("✅ Perfil salvo com sucesso!");
-    }
-
-    function gerarPDF(ronda) {
-        alert(`✅ Card gerado para: ${ronda.posto}`);
-    }
-
-    function previewImage(input) {
-        // Função placeholder - pode ser expandida depois
-        if (input.files && input.files[0]) {
-            alert("📸 Foto selecionada (funcionalidade de preview mantida)");
-        }
     }
 
     // Inicialização
