@@ -413,25 +413,21 @@
         if (confirm("Excluir posto?")) { db.postos.splice(index, 1); saveDB(); renderPostos(); }
     }
 
-    function salvarRonda() {
-        const ronda = {
-            id: Date.now(),
-            posto: document.getElementById('r-posto').value || "SEM POSTO",
-            motivo: document.getElementById('r-motivo').value,
-            km: document.getElementById('r-km').value || '—',
-            hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-            colaborador_posto: document.getElementById('r-func').value.trim() || "NÃO INFORMADO",
-            obs: document.getElementById('r-obs').value || 'N/A',
-            foto: fotoBase64,
-            isIntervalo: false
-        };
-        db.rondas.push(ronda);
-        saveDB(); renderRondas();
-        fotoBase64 = "";
-        document.getElementById('r-km').value = '';
-        document.getElementById('r-obs').value = '';
-        document.getElementById('r-func').value = '';
-        alert("✅ Ronda salva!");
+    function renderRondas() {
+        const log = document.getElementById('historico-rondas');
+        log.innerHTML = db.rondas.slice().reverse().map(r => `
+            <div class="ronda-entry">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${r.hora}</strong> — ${r.posto}
+                    </div>
+                    <button onclick="gerarCardIndividual(${r.id})" 
+                            style="background:var(--accent); color:#0a192f; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer;">
+                        🖨️ CARD
+                    </button>
+                </div>
+            </div>
+        `).join('');
     }
 
     async function gerarRelatorioPlantao() {
@@ -534,6 +530,96 @@
     }
 
     window.onload = () => showView('home');
+    async function gerarCardIndividual(id) {
+        // Busca a ronda específica pelo ID
+        const r = db.rondas.find(item => item.id === id);
+        if (!r) {
+            alert("Ronda não encontrada!");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        // Cria um PDF no formato "Cupom" (80mm de largura)
+        const doc = new jsPDF({ unit: 'mm', format: [80, 200] });
+        let y = 10;
+
+        // Cabeçalho do Comprovante 
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
+        
+        // Inserção da Foto
+        y += 5;
+        if (r.foto) {
+            try {
+                doc.addImage(r.foto, 'JPEG', 5, y, 70, 45);
+                y += 50;
+            } catch (e) { 
+                console.error("Erro ao incluir foto", e);
+                y += 5; 
+            }
+        }
+
+        // Nome do Posto [cite: 5]
+        doc.setFontSize(11);
+        doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
+        
+        // Dados de Tempo e Viatura [cite: 6, 7]
+        y += 7;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        const dataRonda = r.data || new Date().toLocaleDateString('pt-BR');
+        doc.text(`Data: ${dataRonda} | Hora: ${r.hora}`, 5, y);
+        
+        y += 5;
+        const placaVtr = db.perfil.placa || "---";
+        doc.text(`VTR: ${placaVtr} | KM: ${r.km}`, 5, y);
+        
+        // Nome do Colaborador [cite: 8]
+        y += 5;
+        doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
+
+        // Status Operacional (Checklist) [cite: 9, 10, 11, 12, 13, 14, 15]
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.text("STATUS OPERACIONAL:", 5, y);
+        doc.setFont("helvetica", "normal");
+        
+        const itensCheck = ["APRESENTAÇÃO", "UNIFORME", "POSTURA", "LIVRO OCOR.", "MATERIAL", "OUTROS"];
+        itensCheck.forEach(item => {
+            y += 5;
+            // Verifica se o item estava OK no momento da salva
+            const status = (r.checklist && r.checklist[item]) ? r.checklist[item] : "OK";
+            doc.text(`• ${item}: ${status}`, 8, y);
+        });
+
+        // Observações [cite: 16, 17]
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.text("OBSERVAÇÕES:", 5, y);
+        doc.setFont("helvetica", "normal");
+        y += 5;
+        const textoObs = r.obs || "Sn.";
+        const obsDividida = doc.splitTextToSize(textoObs, 70);
+        doc.text(obsDividida, 5, y);
+        
+       // Rodapé Dinâmico: Busca o Cargo e o Nome do seu Perfil 
+        y += (obsDividida.length * 5) + 10;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+
+        // Puxa o cargo salvo no perfil. Se estiver vazio, usa "SUPERVISOR" por segurança 
+        const meuCargo = (db.perfil.cargo || "SUPERVISOR").toUpperCase();
+        doc.text(`${meuCargo}:`, 5, y);
+        
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        // Puxa o seu nome salvo no perfil [cite: 19]
+        doc.text(db.perfil.nome.toUpperCase(), 5, y);
+
+        // Gera o download do arquivo com o nome do posto
+        doc.save(`Card_${r.posto.replace(/\s+/g, '_')}.pdf`);
+    }
 </script>
 </body>
 </html>
