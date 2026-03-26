@@ -446,12 +446,38 @@
         const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
         document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
 
+        function showView(view) {
+        document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-' + view).classList.remove('hidden');
+
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('nav-' + view).classList.add('active');
+
+        const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
+        document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
+
         if (view === 'rondas') {
             document.getElementById('r-placa').value = db.perfil.placa || "";
-            document.getElementById('r-func').value = db.perfil.nome || "";
+            
+            // 1. LIMPA O CAMPO DO COLABORADOR (PARA VOCÊ DIGITAR O NOME DO POSTO)
+            document.getElementById('r-func').value = ""; 
+
+            // 2. CARREGA A LISTA DE POSTOS NO SELECT
+            const selectPosto = document.getElementById('r-posto');
+            if (selectPosto) {
+                selectPosto.innerHTML = '<option value="">Selecione um posto...</option>';
+                db.postos.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.nome;
+                    opt.textContent = p.nome;
+                    selectPosto.appendChild(opt);
+                });
+            }
+
             renderRondas();
             atualizarBotaoIntervalo();
         }
+        
         if (view === 'perfil') {
             document.getElementById('p-nome').value = db.perfil.nome || '';
             document.getElementById('p-matrícula').value = db.perfil.matricula || '';
@@ -460,6 +486,7 @@
             document.getElementById('p-empresa').value = db.perfil.empresa || '';
             document.getElementById('p-cnpj').value = db.perfil.cnpj || '';
         }
+        
         if (view === 'postos') renderPostos();
     }
 
