@@ -326,10 +326,12 @@
         </div>
 
         <label>Posto / Local</label>
-        <input type="text" id="r-posto" placeholder="Digite o nome do posto ou local">
+        <select id="r-posto">
+            <option value="">Selecione um posto...</option>
+        </select>
 
-        <label>Colaborador</label>
-        <input type="text" id="r-func" readonly>
+        <label>Colaborador do Posto (Fiscalizado)</label>
+        <input type="text" id="r-func" placeholder="Nome do colaborador no local">
 
         <label>Missão / Tipo de Atividade</label>
         <select id="r-motivo" onchange="toggleFiscalizacao()">
@@ -352,7 +354,7 @@
         </div>
 
         <label>Observações / Ocorrências</label>
-        <textarea id="r-obs" rows="3" placeholder="Descreva qualquer ocorrência ou observação..."></textarea>
+        <textarea id="r-obs" rows="3" placeholder="Descreva qualquer ocorrência..."></textarea>
 
         <label>Foto da Atividade (Opcional)</label>
         <input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
@@ -371,7 +373,6 @@
         <div id="historico-rondas" style="max-height: 420px; overflow-y: auto; padding-right: 8px;"></div>
     </div>
 </div>
-
 <div id="view-perfil" class="container hidden">
     <div class="card">
         <h3>MEU PERFIL OPERACIONAL</h3>
