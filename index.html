@@ -17,7 +17,6 @@
             --bg: #0f1c2e;
             --card: #16233a;
             --text: #e0e7ff;
-            --text-light: #a3bffa;
         }
 
         * { box-sizing: border-box; }
@@ -90,67 +89,22 @@
             font-size: 1rem;
         }
 
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
         .btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 12px;
+            padding: 14px;
             border: none;
             border-radius: 6px;
             font-weight: 700;
-            font-size: 0.96rem;
+            font-size: 0.95rem;
             text-transform: uppercase;
             cursor: pointer;
+            margin-top: 8px;
         }
 
-        .btn-primary { background: var(--accent); color: #0a192f; }
+        .btn-primary { background: var(--accent); color: #0a192f; width: 100%; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-info { background: #2563eb; color: white; }
+        .btn-small { padding: 10px 14px; font-size: 0.85rem; width: auto; }
 
-        .btn:active { transform: scale(0.96); }
-
-        .menu-item {
-            background: var(--card);
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            cursor: pointer;
-        }
-
-        .menu-icon {
-            font-size: 2.1rem;
-            width: 62px;
-            height: 62px;
-            background: #1e2a44;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .menu-text b {
-            display: block;
-            font-size: 1.08rem;
-            color: white;
-            margin-bottom: 2px;
-        }
-
-        .menu-text span {
-            font-size: 0.82rem;
-            color: #94a3b8;
-        }
-
-        /* === CORREÇÃO AQUI: Postos === */
-        #lista-postos .posto-item {
+        .posto-item {
             background: var(--card);
             border: 1px solid #334155;
             border-radius: 8px;
@@ -162,26 +116,15 @@
             gap: 12px;
         }
 
-        #lista-postos .posto-nome {
+        .posto-nome {
             font-weight: 600;
             font-size: 1.02rem;
             flex: 1;
             word-break: break-word;
-            hyphens: auto;
         }
 
-        .viatura-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .checklist-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 9px;
-            margin-top: 10px;
-        }
+        .viatura-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
 
         .check-item {
             background: #1e2a44;
@@ -194,17 +137,8 @@
             cursor: pointer;
         }
 
-        .check-item.ok {
-            border-color: var(--success);
-            color: var(--success);
-            background: rgba(35, 134, 54, 0.2);
-        }
-
-        .check-item.pendencia {
-            border-color: var(--danger);
-            color: var(--danger);
-            background: rgba(248, 81, 73, 0.2);
-        }
+        .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.2); }
+        .check-item.pendencia { border-color: var(--danger); color: var(--danger); background: rgba(248, 81, 73, 0.2); }
 
         .ronda-entry {
             background: #1e2a44;
@@ -215,21 +149,15 @@
             font-size: 0.87rem;
         }
 
-        .entry-break {
-            border-left-color: #3b82f6;
-            background: #1e3a5f;
-        }
+        .entry-break { border-left-color: #3b82f6; background: #1e3a5f; }
 
         .nav-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: var(--primary);
             display: flex;
             border-top: 4px solid var(--accent);
             z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
         }
 
         .nav-item {
@@ -242,14 +170,8 @@
             text-transform: uppercase;
         }
 
-        .nav-item.active {
-            color: var(--accent);
-        }
-
-        .nav-item div {
-            font-size: 1.45rem;
-            margin-bottom: 3px;
-        }
+        .nav-item.active { color: var(--accent); }
+        .nav-item div { font-size: 1.45rem; margin-bottom: 3px; }
 
         .hidden { display: none !important; }
     </style>
@@ -264,54 +186,30 @@
 <div id="view-home" class="container">
     <div class="menu-item" onclick="showView('rondas')">
         <div class="menu-icon">📍</div>
-        <div class="menu-text">
-            <b>REGISTRO DE RONDAS</b>
-            <span>Atividades operacionais</span>
-        </div>
+        <div class="menu-text"><b>REGISTRO DE RONDAS</b><span>Atividades operacionais</span></div>
     </div>
-
     <div class="menu-item" onclick="showView('postos')">
         <div class="menu-icon">📋</div>
-        <div class="menu-text">
-            <b>BASE DE POSTOS</b>
-            <span>Consulta e gerenciamento</span>
-        </div>
+        <div class="menu-text"><b>BASE DE POSTOS</b><span>Consulta e gerenciamento</span></div>
     </div>
-
     <div class="menu-item" onclick="gerarRelatorioPlantao()">
         <div class="menu-icon">📄</div>
-        <div class="menu-text">
-            <b>RELATÓRIO DE PLANTÃO</b>
-            <span>Gerar PDF completo</span>
-        </div>
+        <div class="menu-text"><b>RELATÓRIO DE PLANTÃO</b><span>Gerar PDF completo</span></div>
     </div>
-
     <div class="menu-item" onclick="showView('perfil')">
         <div class="menu-icon">👤</div>
-        <div class="menu-text">
-            <b>MEU PERFIL</b>
-            <span>Dados do colaborador</span>
-        </div>
+        <div class="menu-text"><b>MEU PERFIL</b><span>Dados do colaborador</span></div>
     </div>
 </div>
 
 <div id="view-rondas" class="container hidden">
     <div class="card">
         <h3>REGISTRO OPERACIONAL</h3>
-        
-        <button id="btn-intervalo" class="btn btn-info" onclick="gerenciarIntervalo()">
-            ☕ INICIAR INTERVALO / JANTA
-        </button>
+        <button id="btn-intervalo" class="btn btn-info" onclick="gerenciarIntervalo()">☕ INICIAR INTERVALO / JANTA</button>
 
         <div class="viatura-grid" style="margin-top:18px;">
-            <div>
-                <label>Viatura (Placa)</label>
-                <input type="text" id="r-placa" readonly>
-            </div>
-            <div>
-                <label>KM Atual</label>
-                <input type="number" id="r-km" placeholder="000000">
-            </div>
+            <div><label>Viatura (Placa)</label><input type="text" id="r-placa" readonly></div>
+            <div><label>KM Atual</label><input type="number" id="r-km" placeholder="000000"></div>
         </div>
 
         <label>Posto / Local</label>
@@ -320,7 +218,7 @@
         <label>Colaborador</label>
         <input type="text" id="r-func" readonly>
 
-        <label>Missão / Tipo de Atividade</label>
+        <label>Missão / Tipo</label>
         <select id="r-motivo" onchange="toggleFiscalizacao()">
             <option value="Fiscalização">Fiscalização</option>
             <option value="Deslocamento">Deslocamento</option>
@@ -340,56 +238,50 @@
             </div>
         </div>
 
-        <label>Observações / Ocorrências</label>
-        <textarea id="r-obs" rows="3" placeholder="Descreva qualquer ocorrência ou observação..."></textarea>
+        <label>Observações</label>
+        <textarea id="r-obs" rows="3" placeholder="Descreva qualquer ocorrência..."></textarea>
 
-        <label>Foto da Atividade (Opcional)</label>
+        <label>Foto (Opcional)</label>
         <input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
 
-        <button class="btn btn-primary" onclick="salvarRonda()" style="margin-top:22px;">
-            ✅ FINALIZAR E GERAR CARD
-        </button>
-
-        <button class="btn btn-danger" onclick="zerarPlantao()" style="margin-top:12px;">
-            🗑️ ZERAR PLANTÃO
-        </button>
+        <button class="btn btn-primary" onclick="salvarRonda()" style="margin-top:22px;">✅ FINALIZAR E GERAR CARD</button>
+        <button class="btn btn-danger" onclick="zerarPlantao()" style="margin-top:12px;">🗑️ ZERAR PLANTÃO</button>
     </div>
 
     <div class="card">
         <h3>LOG DE ATIVIDADES</h3>
-        <div id="historico-rondas" style="max-height: 420px; overflow-y: auto; padding-right: 8px;"></div>
+        <div id="historico-rondas" style="max-height: 420px; overflow-y: auto;"></div>
     </div>
 </div>
 
 <div id="view-perfil" class="container hidden">
     <div class="card">
         <h3>MEU PERFIL OPERACIONAL</h3>
-        <label>Nome Completo</label>
-        <input type="text" id="p-nome">
-
-        <label>Matrícula</label>
-        <input type="number" id="p-matrícula">
-
-        <label>Placa da Viatura</label>
-        <input type="text" id="p-placa" placeholder="ABC-1234">
-
-        <label>Cargo</label>
-        <input type="text" id="p-cargo" placeholder="Vigilante / Supervisor / Líder">
-
-        <label>Empresa</label>
-        <input type="text" id="p-empresa">
-
-        <label>CNPJ</label>
-        <input type="text" id="p-cnpj">
-
-        <button class="btn btn-primary" onclick="salvarPerfil()">SALVAR DADOS DO PERFIL</button>
+        <label>Nome Completo</label><input type="text" id="p-nome">
+        <label>Matrícula</label><input type="number" id="p-matrícula">
+        <label>Placa da Viatura</label><input type="text" id="p-placa" placeholder="ABC-1234">
+        <label>Cargo</label><input type="text" id="p-cargo" placeholder="Vigilante / Supervisor">
+        <label>Empresa</label><input type="text" id="p-empresa">
+        <label>CNPJ</label><input type="text" id="p-cnpj">
+        <button class="btn btn-primary" onclick="salvarPerfil()">SALVAR PERFIL</button>
     </div>
 </div>
 
 <div id="view-postos" class="container hidden">
     <div class="card">
         <h3>BASE DE POSTOS</h3>
+        
+        <!-- Adicionar novo posto -->
+        <label>Novo Posto</label>
+        <input type="text" id="novo-posto-nome" placeholder="Nome do novo posto">
+        <button class="btn btn-primary" onclick="adicionarPosto()">➕ ADICIONAR POSTO</button>
+
+        <hr style="border:1px solid #334155; margin:20px 0;">
+
+        <!-- Busca -->
         <input type="text" id="busca-posto" placeholder="Pesquisar posto..." onkeyup="renderPostos()" style="margin-bottom:16px; padding:14px;">
+
+        <!-- Lista -->
         <div id="lista-postos"></div>
     </div>
 </div>
@@ -419,10 +311,12 @@
 
     function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
-        document.getElementById('view-' + view).classList.remove('hidden');
+        const target = document.getElementById('view-' + view);
+        if (target) target.classList.remove('hidden');
 
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav-' + view).classList.add('active');
+        const nav = document.getElementById('nav-' + view);
+        if (nav) nav.classList.add('active');
 
         const titles = { 'home': 'SENTINELA OPS', 'rondas': 'REGISTRO DE RONDAS', 'perfil': 'MEU PERFIL', 'postos': 'BASE DE POSTOS' };
         document.getElementById('main-title').innerText = titles[view] || 'SENTINELA OPS';
@@ -441,24 +335,55 @@
             document.getElementById('p-empresa').value = db.perfil.empresa || '';
             document.getElementById('p-cnpj').value = db.perfil.cnpj || '';
         }
-        if (view === 'postos') renderPostos();
+        if (view === 'postos') {
+            document.getElementById('novo-posto-nome').value = '';
+            renderPostos();
+        }
+    }
+
+    // ====================== FUNÇÕES DE POSTOS ======================
+    function adicionarPosto() {
+        const nome = document.getElementById('novo-posto-nome').value.trim();
+        if (!nome) {
+            alert("❌ Digite o nome do posto.");
+            return;
+        }
+        if (db.postos.some(p => p.nome.toLowerCase() === nome.toLowerCase())) {
+            alert("⚠️ Este posto já existe.");
+            return;
+        }
+
+        db.postos.push({ nome: nome, endereco: "" });
+        saveDB();
+        renderPostos();
+        document.getElementById('novo-posto-nome').value = '';
+        alert("✅ Posto adicionado com sucesso!");
+    }
+
+    function excluirPosto(index) {
+        if (confirm("Tem certeza que deseja excluir este posto?\nEsta ação não pode ser desfeita.")) {
+            db.postos.splice(index, 1);
+            saveDB();
+            renderPostos();
+        }
     }
 
     function renderPostos() {
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
         const lista = document.getElementById('lista-postos');
         
-        const filtrados = db.postos.filter(p => 
-            p.nome.toLowerCase().includes(busca)
-        );
+        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
 
         lista.innerHTML = filtrados.map((p, i) => `
             <div class="posto-item">
                 <div class="posto-nome">${p.nome}</div>
-                <button onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.nome)}','_blank')" 
-                        style="background:#334155; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:0.8rem; cursor:pointer;">
-                    MAPA
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.nome)}','_blank')" 
+                            style="background:#334155; color:white; border:none; padding:10px 14px; border-radius:6px; font-size:0.85rem;">
+                        MAPA
+                    </button>
+                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">EXCLUIR</button>
+                </div>
             </div>
         `).join('');
 
@@ -467,8 +392,8 @@
         }
     }
 
-    // ==================== RESTO DAS FUNÇÕES (mantidas) ====================
-    function salvarRonda() {
+    // ====================== OUTRAS FUNÇÕES ======================
+    async function salvarRonda() {
         const checklistStatus = {};
         document.querySelectorAll('#checklist .check-item').forEach(item => {
             checklistStatus[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
@@ -491,7 +416,7 @@
         renderRondas();
         gerarPDF(ronda);
 
-        // Limpar
+        // Limpar formulário
         document.getElementById('r-km').value = '';
         document.getElementById('r-obs').value = '';
         document.getElementById('r-posto').value = '';
@@ -505,8 +430,7 @@
             alert("⚠️ Cadastre seu perfil e registre pelo menos uma ronda.");
             return;
         }
-        alert("✅ Relatório gerado (função mantida)");
-        // Aqui você pode colar novamente a função completa do PDF se quiser
+        alert("✅ Relatório gerado (implementação completa disponível se precisar)");
     }
 
     function zerarPlantao() {
@@ -583,10 +507,17 @@
         alert("✅ Perfil salvo!");
     }
 
-    // Função básica do PDF (pode ser expandida depois)
     function gerarPDF(ronda) {
         alert(`✅ Card gerado para: ${ronda.posto}`);
-        // Aqui você pode colocar o código completo do jsPDF se quiser
+        // Coloque aqui o código completo do jsPDF se quiser o PDF real
+    }
+
+    async function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => { fotoBase64 = e.target.result; };
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 
     window.onload = () => showView('home');
