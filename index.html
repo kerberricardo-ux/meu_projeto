@@ -577,74 +577,89 @@
         document.querySelectorAll('#checklist .check-item').forEach(item => item.classList.add('ok'));
     }
 
-    async function gerarRelatorioPlantao() {
+  async function gerarRelatorioPlantao() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        // 'l' ativa o modo Paisagem (folha deitada) para caber as colunas da sua imagem
+        const doc = new jsPDF('l', 'mm', 'a4');
         
-        // Verifica se há dados no perfil e nas rondas
         if (!db.perfil.nome || db.rondas.length === 0) {
             alert("⚠️ Preencha seu perfil completo e registre rondas antes de gerar o relatório.");
             return;
         }
 
         const margemEsq = 15;
-        let y = 20;
+        let y = 15;
         const dataHoje = new Date().toLocaleDateString('pt-BR');
-        
-        // Filtra apenas rondas reais (ignora intervalos no cálculo do total)
         const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
-        const totalVisitas = rondasEfetivas.length;
 
-        // --- CABEÇALHO CENTRALIZADO ---
+        // --- TÍTULO CENTRALIZADO ---
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("RELATÓRIO DE PLANTÃO", 105, y, { align: "center" });
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
         
+        // --- DATA E INFORMAÇÕES DO PERFIL ---
         y += 15;
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
         doc.text(`DATA: ${dataHoje}`, margemEsq, y);
         
-        y += 7;
-        // Puxa Nome, Cargo e Matrícula salvos no seu Perfil
-        const infoColaborador = `${db.perfil.nome.toUpperCase()}, ${db.perfil.cargo.toUpperCase()}, MAT: ${db.perfil.matricula}`;
-        doc.text(infoColaborador, margemEsq, y);
+        y += 10;
+        const matricula = db.perfil.matricula || "N/C";
+        doc.text(`${db.perfil.nome.toUpperCase()}     ${db.perfil.cargo.toUpperCase()}     MAT: ${matricula}`, margemEsq, y);
 
-        y += 12;
+        // --- TOTAL DE VISITAS ---
+        y += 15;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL DE VISITAS (${totalVisitas})`, margemEsq, y);
+        doc.text(`TOTAL DE VISITAS (${rondasEfetivas.length})`, margemEsq, y);
         
         y += 8;
-        doc.line(margemEsq, y, 195, y); // Linha divisória
+        doc.line(margemEsq, y, 282, y); // Linha divisória horizontal
         y += 10;
 
-        // --- LISTAGEM DAS VISITAS ---
-        doc.setFontSize(8);
-        rondasEfetivas.forEach((r, index) => {
-            if (y > 260) { doc.addPage(); y = 20; } // Cria nova página se encher
+        // --- CABEÇALHO DAS COLUNAS (ALINHADO COM SUA IMAGEM) ---
+        doc.setFontSize(9);
+        // Posições X de cada coluna para não amontoar
+        const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
 
-            // VALIDAÇÃO: Se a ronda tiver foto salva, coloca "OK"
+        doc.text("N°", col.n, y);
+        doc.text("POSTO", col.posto, y);
+        doc.text("HORA", col.hora, y);
+        doc.text("COLABORADOR", col.colab, y);
+        doc.text("MOTIVO", col.motivo, y);
+        doc.text("VTR", col.vtr, y);
+        doc.text("KM", col.km, y);
+        doc.text("VALIDAÇÃO", col.valida, y);
+
+        y += 8;
+
+        // --- LISTAGEM EM COLUNAS ---
+        doc.setFont("helvetica", "normal");
+        rondasEfetivas.forEach((r, index) => {
+            if (y > 185) { doc.addPage(); y = 20; }
+
             const validacao = r.foto ? "OK" : "N/A";
             
-            // Monta a linha conforme seu exemplo
-            const textoLinha = `${index + 1}. POSTO: ${r.posto}, HORA: ${r.hora}, COLABORADOR: ${db.perfil.nome}, MOTIVO: ${r.motivo}, VTR: ${db.perfil.placa}, KM: ${r.km}, VALIDAÇÃO: ${validacao}`;
-            
-            // Quebra o texto se for maior que a largura da folha
-            const splitTexto = doc.splitTextToSize(textoLinha, 180);
-            doc.setFont("helvetica", "normal");
-            doc.text(splitTexto, margemEsq, y);
-            
-            y += (splitTexto.length * 7); // Espaço para a próxima visita
+            doc.text(`${index + 1}.`, col.n, y);
+            doc.text(r.posto.toUpperCase().substring(0, 30), col.posto, y);
+            doc.text(r.hora, col.hora, y);
+            doc.text(db.perfil.nome.toUpperCase().substring(0, 25), col.colab, y);
+            doc.text(r.motivo.toUpperCase(), col.motivo, y);
+            doc.text(db.perfil.placa || "—", col.vtr, y);
+            doc.text(r.km.toString(), col.km, y);
+            doc.text(validacao, col.valida, y);
+
+            y += 8;
         });
 
-        // --- RODAPÉ CENTRALIZADO (NOME DA EMPRESA E CNPJ) ---
+        // --- RODAPÉ CENTRALIZADO (EMPRESA E CNPJ) ---
+        const rodapeY = 195;
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(db.perfil.empresa.toUpperCase(), 105, 280, { align: "center" });
+        const nomeEmpresa = db.perfil.empresa ? db.perfil.empresa.toUpperCase() : "EMPRESA";
+        doc.text(nomeEmpresa, 148.5, rodapeY - 6, { align: "center" });
         doc.setFont("helvetica", "normal");
-        doc.text(`CNPJ: ${db.perfil.cnpj}`, 105, 287, { align: "center" });
+        doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
 
-        // SALVA O PDF
         doc.save(`RELATORIO_PLANTAO_${db.perfil.nome.replace(/\s+/g, '_')}.pdf`);
         alert("✅ Relatório gerado com sucesso!");
     }
