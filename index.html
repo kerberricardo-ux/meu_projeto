@@ -96,7 +96,6 @@
         }
 
         .btn {
-            width: 100%;
             padding: 16px;
             margin-top: 12px;
             border: none;
@@ -107,12 +106,12 @@
             cursor: pointer;
         }
 
-        .btn-primary { background: var(--accent); color: #0a192f; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-info { background: #2563eb; color: white; }
+        .btn-primary { background: var(--accent); color: #0a192f; width: 100%; }
+        .btn-danger { background: var(--danger); color: white; width: 100%; }
+        .btn-info { background: #2563eb; color: white; width: 100%; }
         .btn-small { 
             padding: 10px 14px; 
-            font-size: 0.85rem; 
+            font-size: 0.78rem; 
             width: auto; 
             margin: 0;
         }
@@ -167,55 +166,6 @@
             gap: 12px;
         }
 
-        #lista-postos .posto-nome {
-            font-weight: 600;
-            font-size: 1.02rem;
-            flex: 1;
-            word-break: break-word;
-            hyphens: auto;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .viatura-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .checklist-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 9px;
-            margin-top: 10px;
-        }
-
-        .check-item {
-            background: #1e2a44;
-            border: 2px solid #475569;
-            padding: 13px 10px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 0.79rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .check-item.ok {
-            border-color: var(--success);
-            color: var(--success);
-            background: rgba(35, 134, 54, 0.2);
-        }
-
-        .check-item.pendencia {
-            border-color: var(--danger);
-            color: var(--danger);
-            background: rgba(248, 81, 73, 0.2);
-        }
-
         .ronda-entry {
             background: #1e2a44;
             padding: 13px;
@@ -223,6 +173,10 @@
             margin-bottom: 9px;
             border-left: 5px solid #64748b;
             font-size: 0.87rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
 
         .entry-break {
@@ -313,7 +267,7 @@
             ☕ INICIAR INTERVALO / JANTA
         </button>
 
-        <div class="viatura-grid" style="margin-top:18px;">
+        <div class="viatura-grid" style="margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div>
                 <label>Viatura (Placa)</label>
                 <input type="text" id="r-placa" readonly>
@@ -340,7 +294,7 @@
 
         <div id="sec-fiscalizacao">
             <label>CHECKLIST TÁTICO</label>
-            <div class="checklist-grid" id="checklist">
+            <div class="checklist-grid" id="checklist" style="display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px;">
                 <div class="check-item ok" onclick="toggleCheck(this)">APRESENTAÇÃO</div>
                 <div class="check-item ok" onclick="toggleCheck(this)">UNIFORME</div>
                 <div class="check-item ok" onclick="toggleCheck(this)">POSTURA</div>
@@ -378,13 +332,13 @@
         <input type="text" id="p-nome">
 
         <label>Matrícula</label>
-        <input type="number" id="p-matrícula">
+        <input type="text" id="p-matrícula">
 
         <label>Placa da Viatura</label>
         <input type="text" id="p-placa" placeholder="ABC-1234">
 
         <label>Cargo</label>
-        <input type="text" id="p-cargo" placeholder="Vigilante / Supervisor / Líder">
+        <input type="text" id="p-cargo" placeholder="Vigilante / Supervisor">
 
         <label>Empresa</label>
         <input type="text" id="p-empresa">
@@ -399,13 +353,10 @@
 <div id="view-postos" class="container hidden">
     <div class="card">
         <h3>BASE DE POSTOS</h3>
-        
         <button class="btn btn-primary" onclick="adicionarPosto()" style="margin-bottom: 16px;">
             ➕ ADICIONAR NOVO POSTO
         </button>
-
         <input type="text" id="busca-posto" placeholder="Pesquisar posto..." onkeyup="renderPostos()" style="margin-bottom:16px; padding:14px;">
-        
         <div id="lista-postos"></div>
     </div>
 </div>
@@ -462,14 +413,12 @@
         if (view === 'postos') renderPostos();
     }
 
-    // ====================== GERENCIAMENTO DE POSTOS ======================
+    // ====================== POSTOS ======================
     function renderPostos() {
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
         const lista = document.getElementById('lista-postos');
         
-        const filtrados = db.postos.filter(p => 
-            p.nome.toLowerCase().includes(busca)
-        );
+        const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
 
         if (filtrados.length === 0) {
             lista.innerHTML = `<p style="text-align:center; color:#888; padding:40px 20px;">Nenhum posto encontrado.</p>`;
@@ -484,9 +433,7 @@
                             style="background:#334155; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:0.8rem; cursor:pointer;">
                         MAPA
                     </button>
-                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">
-                        🗑️
-                    </button>
+                    <button onclick="excluirPosto(${i})" class="btn btn-danger btn-small">🗑️</button>
                 </div>
             </div>
         `).join('');
@@ -495,34 +442,27 @@
     function adicionarPosto() {
         const nome = prompt("Digite o nome completo do novo posto:");
         if (!nome || nome.trim() === "") return;
-
         const nomeNormalizado = nome.trim().toUpperCase();
-
-        const jaExiste = db.postos.some(p => p.nome === nomeNormalizado);
-        if (jaExiste) {
-            alert("⚠️ Este posto já está cadastrado na base!");
+        if (db.postos.some(p => p.nome === nomeNormalizado)) {
+            alert("Este posto já está cadastrado!");
             return;
         }
-
         db.postos.push({ nome: nomeNormalizado, endereco: "" });
         saveDB();
         renderPostos();
-        alert("✅ Posto adicionado com sucesso!");
+        alert("Posto adicionado!");
     }
 
     function excluirPosto(indexFiltrado) {
-        if (!confirm("Tem certeza que deseja excluir este posto?\n\nEsta ação não pode ser desfeita.")) return;
-
+        if (!confirm("Excluir este posto?")) return;
         const busca = document.getElementById('busca-posto').value.toLowerCase().trim();
         const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
         const postoParaExcluir = filtrados[indexFiltrado];
         const indiceReal = db.postos.findIndex(p => p.nome === postoParaExcluir.nome);
-
         if (indiceReal !== -1) {
             db.postos.splice(indiceReal, 1);
             saveDB();
             renderPostos();
-            alert("🗑️ Posto excluído com sucesso!");
         }
     }
 
@@ -530,14 +470,12 @@
     function previewImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                fotoBase64 = e.target.result;
-            };
+            reader.onload = function(e) { fotoBase64 = e.target.result; };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // ====================== SALVAR RONDA + GERAR CARD (EXATAMENTE IGUAL À IMAGEM) ======================
+    // ====================== SALVAR RONDA ======================
     function salvarRonda() {
         const checklistStatus = {};
         document.querySelectorAll('#checklist .check-item').forEach(item => {
@@ -560,7 +498,7 @@
         db.rondas.push(ronda);
         saveDB();
         renderRondas();
-        gerarPDFCard(ronda);   // ← Card individual (igual à imagem)
+        gerarPDFCard(ronda);
 
         // Limpar formulário
         document.getElementById('r-km').value = '';
@@ -573,17 +511,15 @@
         fotoBase64 = null;
     }
 
-    // ====================== CARD DE RONDA (EXATAMENTE IGUAL À IMAGEM QUE VOCÊ MANDAU) ======================
+    // ====================== GERAR CARD INDIVIDUAL ======================
     function gerarPDFCard(ronda) {
         const doc = new jsPDF('p', 'mm', 'a4');
         const w = doc.internal.pageSize.getWidth();
         const h = doc.internal.pageSize.getHeight();
 
-        // Fundo azul escuro
         doc.setFillColor(10, 25, 47);
         doc.rect(0, 0, w, h, 'F');
 
-        // Cabeçalho amarelo
         doc.setFillColor(255, 214, 0);
         doc.rect(0, 0, w, 28, 'F');
         doc.setFontSize(19);
@@ -592,7 +528,6 @@
 
         let y = 38;
 
-        // Foto da viatura (se enviada)
         if (ronda.foto) {
             doc.addImage(ronda.foto, 'JPEG', 20, y, 170, 92);
             y += 98;
@@ -605,29 +540,24 @@
             y += 98;
         }
 
-        // Nome do local (amarelo grande)
         doc.setFontSize(22);
         doc.setTextColor(255, 214, 0);
         doc.text(ronda.posto.toUpperCase(), w / 2, y, { align: "center" });
         y += 18;
 
-        // Data e Hora
         doc.setFontSize(13);
         doc.setTextColor(255, 255, 255);
         doc.text(`Data: ${ronda.data} | Hora: ${ronda.hora}`, w / 2, y, { align: "center" });
         y += 12;
 
-        // Viatura e KM
         const placa = db.perfil.placa || "—";
         doc.text(`VTR: ${placa} | KM: ${ronda.km}`, w / 2, y, { align: "center" });
         y += 12;
 
-        // Colaborador
         const colaborador = `${db.perfil.nome || "Colaborador"} ${db.perfil.matricula ? `- ${db.perfil.matricula}` : ''}`;
         doc.text(`COLABORADOR: ${colaborador}`, 22, y);
         y += 14;
 
-        // STATUS OPERACIONAL
         doc.setFontSize(15);
         doc.setTextColor(255, 214, 0);
         doc.text("STATUS OPERACIONAL:", 22, y);
@@ -644,7 +574,6 @@
         });
         y += statusItems.length * 7 + 12;
 
-        // Observações
         doc.setFontSize(15);
         doc.setTextColor(255, 214, 0);
         doc.text("OBSERVAÇÕES:", 22, y);
@@ -654,7 +583,6 @@
         doc.setTextColor(255, 255, 255);
         const obsLinhas = doc.splitTextToSize(ronda.obs || "N/A", w - 44);
         doc.text(obsLinhas, 22, y);
-        y += obsLinhas.length * 6 + 15;
 
         // QR Code
         const qrContainer = document.createElement('div');
@@ -677,20 +605,17 @@
         }
         document.body.removeChild(qrContainer);
 
-        // Supervisor
         doc.setFontSize(10);
         doc.setTextColor(180, 180, 180);
-        doc.text("SUPERVISOR:", 22, h - 22);
-        doc.text("Ricardo Kerber", 22, h - 16);
+        doc.text("SUPERVISOR: Ricardo Kerber", 22, h - 22);
 
-        // Salvar
         const nomeArquivo = `Comprovante_Ronda_\( {ronda.posto.replace(/[^a-zA-Z0-9]/g, '_')}_ \){ronda.data}.pdf`;
         doc.save(nomeArquivo);
 
-        alert(`✅ Card gerado com sucesso!\n\n${ronda.posto} - ${ronda.data} ${ronda.hora}`);
+        alert(`✅ Card gerado!\n${ronda.posto} - ${ronda.data} ${ronda.hora}`);
     }
 
-    // ====================== RELATÓRIO DE PLANTÃO (PDF A4 - DIFERENTE DO CARD) ======================
+    // ====================== NOVO RELATÓRIO DE PLANTÃO ======================
     function gerarRelatorioPlantao() {
         if (!db.perfil.nome || db.rondas.length === 0) {
             alert("⚠️ Cadastre seu perfil e registre pelo menos uma ronda.");
@@ -698,52 +623,58 @@
         }
 
         const doc = new jsPDF('p', 'mm', 'a4');
-        let y = 20;
+        let y = 25;
 
-        doc.setFontSize(22);
+        doc.setFontSize(20);
         doc.setTextColor(0, 0, 0);
         doc.text("RELATÓRIO DE PLANTÃO", 105, y, { align: "center" });
-        y += 12;
+        y += 15;
 
         doc.setFontSize(12);
-        doc.text(`Colaborador: ${db.perfil.nome || ''} ${db.perfil.matricula ? `- ${db.perfil.matricula}` : ''}`, 20, y);
+        doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, y);
+        y += 10;
+
+        doc.text(`Nome: ${db.perfil.nome || ''}`, 20, y);
         y += 8;
-        doc.text(`Viatura: ${db.perfil.placa || '—'}`, 20, y);
+        doc.text(`Cargo: ${db.perfil.cargo || '—'}`, 20, y);
         y += 8;
-        doc.text(`Data do relatório: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`, 20, y);
+        doc.text(`Matrícula: ${db.perfil.matricula || '—'}`, 20, y);
         y += 20;
 
-        doc.setFontSize(15);
-        doc.setTextColor(0, 0, 0);
-        doc.text("LOG DE ATIVIDADES REALIZADAS", 20, y);
+        doc.setFontSize(14);
+        doc.text("ATIVIDADES REALIZADAS:", 20, y);
         y += 12;
 
-        db.rondas.forEach(r => {
+        doc.setFontSize(11);
+        db.rondas.forEach((r, index) => {
             if (y > 270) {
                 doc.addPage();
                 y = 20;
             }
 
-            doc.setFontSize(11);
             if (r.isIntervalo) {
-                doc.text(`🛑 \( {r.hora} — INTERVALO / JANTA ( \){r.duracao} min)`, 20, y);
+                doc.text(`${index + 1}. INTERVALO / JANTA - \( {r.hora} ( \){r.duracao} min)`, 20, y);
             } else {
-                doc.text(`${r.hora} — ${r.posto} | ${r.motivo} | KM: ${r.km}`, 20, y);
-                y += 7;
-                if (r.obs && r.obs !== 'N/A') {
-                    doc.text(`   Obs: ${r.obs}`, 25, y);
-                }
+                const linha = `${index + 1}. ${r.posto} | ${r.hora} | ${db.perfil.nome || 'Colaborador'} | ${r.motivo} | VTR: ${db.perfil.placa || '—'} | KM: ${r.km}`;
+                doc.text(linha, 20, y);
             }
-            y += 12;
+            y += 10;
         });
+
+        y += 25;
+        doc.setFontSize(12);
+        doc.text(`Empresa: ${db.perfil.empresa || '—'}`, 20, y);
+        y += 8;
+        doc.text(`CNPJ: ${db.perfil.cnpj || '—'}`, 20, y);
 
         doc.setFontSize(9);
         doc.text("Relatório gerado automaticamente pelo Sentinela OPS", 105, 287, { align: "center" });
 
         doc.save(`Relatorio_Plantao_${new Date().toLocaleDateString('pt-BR')}.pdf`);
-        alert("✅ Relatório de plantão gerado com sucesso (PDF A4 baixado)!");
+        alert("✅ Relatório de plantão gerado com sucesso!");
     }
 
+    // ====================== OUTRAS FUNÇÕES ======================
     function zerarPlantao() {
         if (confirm("Tem certeza que deseja ZERAR todo o plantão?")) {
             db.rondas = [];
@@ -791,12 +722,26 @@
 
     function renderRondas() {
         const log = document.getElementById('historico-rondas');
-        log.innerHTML = db.rondas.slice().reverse().map(r => `
-            <div class="ronda-entry ${r.isIntervalo ? 'entry-break' : ''}">
-                <strong>${r.hora}</strong> — ${r.posto} ${r.duracao ? '('+r.duracao+'min)' : ''}
-            </div>
-        `).join('');
+        log.innerHTML = db.rondas.slice().reverse().map((r, idx) => {
+            const realIndex = db.rondas.length - 1 - idx;
+            return `
+                <div class="ronda-entry ${r.isIntervalo ? 'entry-break' : ''}">
+                    <div>
+                        <strong>${r.hora}</strong> — ${r.posto} ${r.duracao ? '(' + r.duracao + 'min)' : ''}
+                    </div>
+                    ${!r.isIntervalo ? `
+                    <button onclick="gerarCardDaLista(${realIndex})" class="btn btn-small" style="background:#ffd600; color:#0a192f;">
+                        📄 Card
+                    </button>` : ''}
+                </div>
+            `;
+        }).join('');
     }
+
+    window.gerarCardDaLista = function(index) {
+        const ronda = db.rondas[index];
+        if (ronda && !ronda.isIntervalo) gerarPDFCard(ronda);
+    };
 
     function toggleFiscalizacao() {
         const motivo = document.getElementById('r-motivo').value;
@@ -811,7 +756,7 @@
     function salvarPerfil() {
         db.perfil = {
             nome: document.getElementById('p-nome').value.trim(),
-            matricula: document.getElementById('p-matrícula').value,
+            matricula: document.getElementById('p-matrícula').value.trim(),
             placa: document.getElementById('p-placa').value.toUpperCase().trim(),
             cargo: document.getElementById('p-cargo').value.trim(),
             empresa: document.getElementById('p-empresa').value.trim(),
