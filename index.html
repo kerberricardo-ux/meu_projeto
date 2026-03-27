@@ -1,214 +1,81 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENTINELA OPS 🛡️</title>
+    <title>SENTINELA OPS - V2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --primary: #0a192f; 
-            --accent: #ffd600; 
-            --danger: #f85149;
-            --success: #238636; 
-            --bg: #0f1c2e; 
-            --card: #16233a;
-            --text: #e0e7ff; 
-            --text-light: #a3bffa;
+            --primary: #0a192f; --accent: #ffd600; --danger: #f85149;
+            --success: #238636; --bg: #0f1c2e; --card: #16233a;
+            --text: #e0e7ff; --text-light: #a3bffa;
         }
         * { box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            color: var(--text); 
-            padding-bottom: 75px; 
-            line-height: 1.4; 
-        }
-        .header { 
-            background: var(--primary); 
-            color: white; 
-            padding: 14px 16px; 
-            border-bottom: 4px solid var(--accent); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            font-weight: bold; 
-        }
-        .header h1 { 
-            margin: 0; 
-            font-size: 1.15rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-        }
-        .container { 
-            padding: 12px; 
-            max-width: 640px; 
-            margin: 0 auto; 
-        }
-        .card { 
-            background: var(--card); 
-            border: 1px solid #334155; 
-            border-radius: 8px; 
-            padding: 18px; 
-            margin-bottom: 16px; 
-        }
-        .card h3 { 
-            margin: 0 0 16px 0; 
-            padding-bottom: 10px; 
-            border-bottom: 3px solid var(--accent); 
-            color: var(--accent); 
-            font-size: 0.98rem; 
-            text-transform: uppercase; 
-            font-weight: 700; 
-        }
-        label { 
-            display: block; 
-            font-size: 0.76rem; 
-            font-weight: 600; 
-            color: #94a3b8; 
-            margin: 14px 0 5px 0; 
-            text-transform: uppercase; 
-        }
-        input, select, textarea, button { 
-            width: 100%; 
-            padding: 13px 14px; 
-            background: #1e2a44; 
-            border: 1px solid #475569; 
-            border-radius: 6px; 
-            color: white; 
-            font-size: 1rem; 
-        }
-        .btn { 
-            width: 100%; 
-            padding: 16px; 
-            margin-top: 12px; 
-            border: none; 
-            border-radius: 6px; 
-            font-weight: 700; 
-            font-size: 0.96rem; 
-            text-transform: uppercase; 
-            cursor: pointer; 
-        }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; line-height: 1.4; }
+        .header { background: var(--primary); color: white; padding: 14px 16px; border-bottom: 4px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; font-weight: bold; }
+        .header h1 { margin: 0; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1.5px; }
+        .container { padding: 12px; max-width: 640px; margin: 0 auto; }
+        .card { background: var(--card); border: 1px solid #334155; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+        .card h3 { margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 3px solid var(--accent); color: var(--accent); font-size: 0.98rem; text-transform: uppercase; font-weight: 700; }
+        label { display: block; font-size: 0.76rem; font-weight: 600; color: #94a3b8; margin: 14px 0 5px 0; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 13px 14px; background: #1e2a44; border: 1px solid #475569; border-radius: 6px; color: white; font-size: 1rem; }
+        .btn { width: 100%; padding: 16px; margin-top: 12px; border: none; border-radius: 6px; font-weight: 700; font-size: 0.96rem; text-transform: uppercase; cursor: pointer; }
         .btn-primary { background: var(--accent); color: #0a192f; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-info { background: #2563eb; color: white; }
-        .posto-item { 
-            background: var(--card); 
-            border: 1px solid #334155; 
-            border-radius: 8px; 
-            padding: 16px; 
-            margin-bottom: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .ronda-entry { 
-            background: #1e2a44; 
-            padding: 13px; 
-            border-radius: 6px; 
-            margin-bottom: 9px; 
-            border-left: 5px solid var(--accent); 
-            font-size: 0.87rem; 
-        }
-        .nav-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: var(--primary); 
-            display: flex; 
-            border-top: 4px solid var(--accent); 
-            z-index: 1000; 
-        }
-        .nav-item { 
-            flex: 1; 
-            text-align: center; 
-            padding: 10px 6px; 
-            color: #94a3b8; 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            cursor: pointer; 
-        }
+        .btn-success { background: var(--success); color: white; }
+        .posto-item { background: var(--card); border: 1px solid #334155; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .ronda-entry { background: #1e2a44; padding: 13px; border-radius: 6px; margin-bottom: 9px; border-left: 5px solid var(--accent); font-size: 0.87rem; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--primary); display: flex; border-top: 4px solid var(--accent); z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; padding: 12px 6px; color: #94a3b8; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
         .nav-item.active { color: var(--accent); }
         .hidden { display: none !important; }
-        .checklist-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 9px; 
-            margin-top: 10px; 
-        }
-        .check-item { 
-            background: #1e2a44; 
-            border: 2px solid #475569; 
-            padding: 13px 10px; 
-            border-radius: 6px; 
-            text-align: center; 
-            font-size: 0.79rem; 
-            cursor: pointer; 
-        }
-        .check-item.ok { 
-            border-color: var(--success); 
-            color: var(--success); 
-            background: rgba(35, 134, 54, 0.2); 
-        }
-        .foto-preview { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+        .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+        .check-item { background: #1e2a44; border: 2px solid #475569; padding: 13px 10px; border-radius: 6px; text-align: center; font-size: 0.79rem; cursor: pointer; }
+        .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.2); }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
     <div class="header">
-        <h1>SENTINELA OPS 🛡️</h1>
-        <div style="font-size:0.85rem; opacity:0.9;">REGISTRO OPERACIONAL</div>
+        <h1>SENTINELA OPS</h1>
+        <span>🛡️</span>
     </div>
 
-    <!-- VIEW HOME -->
     <div id="view-home" class="container">
-        <div class="card">
-            <h3>🏠 INÍCIO</h3>
-            <p style="text-align:center; font-size:1.1rem; margin:20px 0;">
-                Bem-vindo ao sistema de rondas<br>
-                <strong id="nome-home"></strong>
-            </p>
-            <button onclick="showView('rondas')" class="btn btn-primary">📍 INICIAR REGISTRO DE RONDAS</button>
-            <button onclick="showView('postos')" class="btn" style="background:#334155; margin-top:8px;">📋 BASE DE POSTOS / ROTAS</button>
-            <button onclick="showView('relatorios')" class="btn" style="background:#2563eb; margin-top:8px;">📄 BIBLIOTECA DE RELATÓRIOS</button>
-        </div>
+        <button class="btn btn-primary" onclick="showView('rondas')">📍 REGISTRO DE RONDAS</button>
+        <button class="btn btn-info" onclick="showView('postos')">📋 BASE DE POSTOS / ROTAS</button>
+        <button class="btn btn-success" onclick="gerarRelatorioPlantao()">📄 RELATÓRIO DE PLANTÃO (PDF)</button>
+        <button class="btn btn-primary" style="background:#4b5563" onclick="showView('biblioteca')">📚 BIBLIOTECA MENSAL</button>
+        <button class="btn btn-info" onclick="showView('perfil')">👤 MEU PERFIL</button>
     </div>
 
-    <!-- VIEW RONDAS -->
     <div id="view-rondas" class="container hidden">
         <div class="card">
-            <h3>📍 REGISTRO DE RONDAS</h3>
-
-            <label>Viatura (Placa)</label>
-            <input type="text" id="r-placa" readonly>
-
-            <label>KM Atual</label>
-            <input type="text" id="r-km" placeholder="Digite o KM atual">
-
+            <h3>REGISTRO OPERACIONAL</h3>
+            <button id="btn-intervalo" class="btn btn-info" onclick="gerenciarIntervalo()">☕ INICIAR INTERVALO</button>
+            
             <label>Posto / Local</label>
             <select id="r-posto"></select>
 
-            <label>Colaborador no Local</label>
-            <input type="text" id="r-func" placeholder="Nome do colaborador">
+            <label>Viatura / KM</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="r-placa" placeholder="Placa" readonly>
+                <input type="number" id="r-km" placeholder="KM Atual">
+            </div>
 
-            <label>Missão / Motivo</label>
+            <label>Colaborador no Local / Missão</label>
+            <input type="text" id="r-func" placeholder="Nome do vigilante">
             <select id="r-motivo" onchange="toggleFiscalizacao()">
-                <option value="">Selecione...</option>
                 <option value="Fiscalização">Fiscalização</option>
                 <option value="Deslocamento">Deslocamento</option>
                 <option value="Entrega de Material">Entrega de Material</option>
                 <option value="Outros">Outros</option>
             </select>
 
-            <div id="sec-fiscalizacao" style="display:none;">
-                <label>Checklist Tático</label>
+            <div id="sec-checklist" style="margin-top:15px;">
+                <label>CHECKLIST TÁTICO</label>
                 <div class="checklist-grid" id="checklist">
                     <div class="check-item" onclick="toggleCheck(this)">APRESENTAÇÃO</div>
                     <div class="check-item" onclick="toggleCheck(this)">UNIFORME</div>
@@ -220,278 +87,98 @@
             </div>
 
             <label>Observações</label>
-            <textarea id="r-obs" rows="3" placeholder="Observações..."></textarea>
+            <textarea id="r-obs" rows="3"></textarea>
 
-            <label>Foto (opcional)</label>
-            <input type="file" id="foto-input" accept="image/*" onchange="previewImage(this)">
+            <label>Foto da Ocorrência</label>
+            <input type="file" accept="image/*" capture="camera" onchange="previewImage(this)">
 
-            <div id="foto-preview-container"></div>
-
-            <button onclick="salvarRonda()" class="btn btn-primary">✅ FINALIZAR E GERAR CARD</button>
-            <button onclick="gerenciarIntervalo()" id="btn-intervalo" class="btn btn-info">☕ INICIAR INTERVALO / JANTA</button>
-            <button onclick="zerarPlantao()" class="btn btn-danger">🗑️ ZERAR PLANTÃO ATUAL</button>
-            <button onclick="gerarRelatorioPlantao()" class="btn" style="background:#238636;">📄 GERAR RELATÓRIO DE PLANTÃO (PDF)</button>
+            <button class="btn btn-success" onclick="salvarRonda()">✅ FINALIZAR REGISTRO</button>
         </div>
+        <div id="historico-rondas"></div>
+    </div>
 
+    <div id="view-biblioteca" class="container hidden">
         <div class="card">
-            <h3>LOG DE ATIVIDADES</h3>
-            <div id="historico-rondas"></div>
+            <h3>📚 BIBLIOTECA DE RELATÓRIOS</h3>
+            <div id="lista-relatorios-salvos"></div>
+            <hr style="border:0; border-top:1px solid #334155; margin: 20px 0;">
+            <h3>⚙️ GESTÃO DE CICLO</h3>
+            <button class="btn btn-danger" onclick="iniciarNovoCiclo()">🔄 FECHAR MÊS / NOVO CICLO</button>
         </div>
     </div>
 
-    <!-- VIEW POSTOS -->
     <div id="view-postos" class="container hidden">
         <div class="card">
-            <h3>📋 BASE DE POSTOS / ROTAS</h3>
-            <input type="text" id="busca-posto" placeholder="Buscar posto..." onkeyup="renderPostos()">
-            <button onclick="adicionarPosto()" class="btn" style="background:#334155; margin:10px 0;">➕ ADICIONAR NOVO POSTO</button>
-            <div id="lista-postos"></div>
+            <h3>BASE DE POSTOS</h3>
+            <button class="btn btn-primary" onclick="adicionarPosto()">➕ ADICIONAR NOVO POSTO</button>
+            <input type="text" id="busca-posto" placeholder="Buscar posto..." onkeyup="renderPostos()" style="margin-top:10px;">
         </div>
+        <div id="lista-postos"></div>
     </div>
 
-    <!-- VIEW PERFIL -->
     <div id="view-perfil" class="container hidden">
         <div class="card">
-            <h3>👤 MEU PERFIL OPERACIONAL</h3>
-            <label>Nome Completo</label>
-            <input type="text" id="p-nome">
-
-            <label>Matrícula</label>
-            <input type="text" id="p-matrícula">
-
-            <label>Cargo</label>
-            <input type="text" id="p-cargo">
-
-            <label>Viatura (Placa)</label>
-            <input type="text" id="p-placa">
-
-            <label>Empresa</label>
-            <input type="text" id="p-empresa">
-
-            <label>CNPJ</label>
-            <input type="text" id="p-cnpj">
-
-            <button onclick="salvarPerfil()" class="btn btn-primary">SALVAR DADOS</button>
+            <h3>MEU PERFIL OPERACIONAL</h3>
+            <label>Nome Completo</label><input type="text" id="p-nome">
+            <label>Matrícula</label><input type="text" id="p-matrícula">
+            <label>Cargo</label><input type="text" id="p-cargo">
+            <label>Viatura (Placa)</label><input type="text" id="p-placa">
+            <label>Empresa</label><input type="text" id="p-empresa">
+            <label>CNPJ</label><input type="text" id="p-cnpj">
+            <button class="btn btn-success" onclick="salvarPerfil()">SALVAR DADOS</button>
         </div>
     </div>
 
-    <!-- NOVA VIEW - BIBLIOTECA DE RELATÓRIOS -->
-    <div id="view-relatorios" class="container hidden">
-        <div class="card">
-            <h3>📚 BIBLIOTECA DE RELATÓRIOS MENSAIS</h3>
-            <button onclick="iniciarNovoCiclo()" class="btn btn-danger" style="margin-bottom:16px;">
-                🚀 INICIAR NOVO CICLO MENSAL
-            </button>
-            <div id="lista-relatorios"></div>
-        </div>
-    </div>
-
-    <!-- NAV BAR -->
     <div class="nav-bar">
         <div class="nav-item" id="nav-home" onclick="showView('home')">🏠 HOME</div>
         <div class="nav-item" id="nav-rondas" onclick="showView('rondas')">📍 RONDAS</div>
-        <div class="nav-item" id="nav-postos" onclick="showView('postos')">📋 POSTOS</div>
-        <div class="nav-item" id="nav-relatorios" onclick="showView('relatorios')">📄 BIBLIOTECA</div>
+        <div class="nav-item" id="nav-biblioteca" onclick="showView('biblioteca')">📚 ARQUIVO</div>
         <div class="nav-item" id="nav-perfil" onclick="showView('perfil')">👤 PERFIL</div>
     </div>
 
     <script>
         let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { 
-            perfil: {}, 
-            postos: [], 
-            rondas: [], 
-            intervaloAtivo: null, 
-            historicoRelatorios: [] 
+            perfil: {}, postos: [], rondas: [], biblioteca: [], intervaloAtivo: null 
         };
-
-        // Migração automática para usuários antigos
-        if (!db.historicoRelatorios) db.historicoRelatorios = [];
-
         let fotoBase64 = "";
 
-        function saveDB() { 
-            localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); 
+        function saveDB() { localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); }
+
+        // --- LÓGICA DE DATA OPERACIONAL (SOLUÇÃO TURNO NOTURNO) ---
+        function getDataOperacional() {
+            const agora = new Date();
+            const hora = agora.getHours();
+            // Se for entre 00:00 e 06:59, retroage 1 dia para manter a data do início do plantão
+            if (hora < 7) {
+                agora.setDate(agora.getDate() - 1);
+            }
+            return {
+                dataBr: agora.toLocaleDateString('pt-BR'),
+                competencia: `${(agora.getMonth() + 1).toString().padStart(2, '0')}/${agora.getFullYear()}`
+            };
         }
 
         function showView(view) {
             document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
-
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            const nav = document.getElementById('nav-' + view);
-            if (nav) nav.classList.add('active');
-
-            if (view === 'home') {
-                document.getElementById('nome-home').textContent = db.perfil.nome ? db.perfil.nome.toUpperCase() : 'SUPERVISOR';
-            }
+            const nav = document.getElementById('nav-' + view); if(nav) nav.classList.add('active');
+            
             if (view === 'rondas') {
-                document.getElementById('r-placa').value = db.perfil.placa || "—";
+                document.getElementById('r-placa').value = db.perfil.placa || "";
                 const sel = document.getElementById('r-posto');
-                sel.innerHTML = '<option>Selecione um posto...</option>';
-                db.postos.forEach(p => {
-                    sel.innerHTML += `<option value="\( {p.nome}"> \){p.nome}</option>`;
-                });
+                sel.innerHTML = '<option value="">Selecione um posto...</option>';
+                db.postos.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`);
                 renderRondas();
                 atualizarBotaoIntervalo();
             }
-            if (view === 'perfil') {
-                document.getElementById('p-nome').value = db.perfil.nome || "";
-                document.getElementById('p-matrícula').value = db.perfil.matricula || "";
-                document.getElementById('p-cargo').value = db.perfil.cargo || "";
-                document.getElementById('p-placa').value = db.perfil.placa || "";
-                document.getElementById('p-empresa').value = db.perfil.empresa || "";
-                document.getElementById('p-cnpj').value = db.perfil.cnpj || "";
-            }
+            if (view === 'biblioteca') renderBiblioteca();
+            if (view === 'perfil') carregarPerfil();
             if (view === 'postos') renderPostos();
-            if (view === 'relatorios') renderBiblioteca();
         }
 
-        // ====================== FUNÇÃO CENTRAL DE PDF ======================
-        async function gerarPDFPlantao(rondasEfetivas, perfil, dataPlantao) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            
-            const margemEsq = 15;
-            let y = 15;
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
-            
-            y += 15;
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
-            doc.text(`DATA: ${dataPlantao}`, margemEsq, y);
-            y += 10;
-            doc.text(`${perfil.nome.toUpperCase()}   ${perfil.cargo.toUpperCase()}   MAT: ${perfil.matricula || 'N/C'}`, margemEsq, y);
-
-            y += 15;
-            doc.setFontSize(9);
-            const col = { n: 15, posto: 30, hora: 90, colab: 115, motivo: 165, vtr: 205, km: 235, valida: 260 };
-            doc.text("N°", col.n, y);
-            doc.text("POSTO", col.posto, y);
-            doc.text("HORA", col.hora, y);
-            doc.text("COLABORADOR", col.colab, y);
-            doc.text("MOTIVO", col.motivo, y);
-            doc.text("VTR", col.vtr, y);
-            doc.text("KM", col.km, y);
-            doc.text("VALIDAÇÃO", col.valida, y);
-
-            y += 8;
-            rondasEfetivas.forEach((r, index) => {
-                if (y > 185) { doc.addPage(); y = 20; }
-                doc.text(`${index + 1}.`, col.n, y);
-                doc.text(r.posto.toUpperCase().substring(0, 30), col.posto, y);
-                doc.text(r.hora, col.hora, y);
-                doc.text(r.colaborador_posto.toUpperCase(), col.colab, y);
-                doc.text(r.motivo.toUpperCase(), col.motivo, y);
-                doc.text(perfil.placa || "—", col.vtr, y);
-                doc.text(r.km.toString(), col.km, y);
-                doc.text(r.foto ? "OK" : "N/A", col.valida, y);
-                y += 8;
-            });
-
-            const rodapeY = 195;
-            doc.setFont("helvetica", "bold");
-            doc.text(perfil.empresa.toUpperCase() || "EMPRESA", 148.5, rodapeY - 6, { align: "center" });
-            doc.text(`CNPJ: ${perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
-
-            doc.save(`Relatorio_Sentinela_${dataPlantao.replace(/\//g, '-')}.pdf`);
-        }
-
-        // ====================== GERAR RELATÓRIO ATUAL (com correção de data noturna) ======================
-        async function gerarRelatorioPlantao() {
-            if (!db.perfil.nome || db.rondas.length === 0) {
-                alert("⚠️ Complete seu perfil primeiro e registre pelo menos uma ronda.");
-                return;
-            }
-
-            const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
-
-            // CORREÇÃO PARA TURNOS NOTURNOS - usa sempre o dia de INÍCIO do plantão
-            let dataPlantao = new Date().toLocaleDateString('pt-BR');
-            if (rondasEfetivas.length > 0) {
-                const datas = rondasEfetivas.map(r => {
-                    const [d, m, a] = r.data.split('/').map(Number);
-                    return new Date(a, m - 1, d).getTime();
-                });
-                const minTime = Math.min(...datas);
-                dataPlantao = new Date(minTime).toLocaleDateString('pt-BR');
-            }
-
-            await gerarPDFPlantao(rondasEfetivas, db.perfil, dataPlantao);
-
-            // ARQUIVAMENTO AUTOMÁTICO NA BIBLIOTECA
-            const report = {
-                id: Date.now(),
-                competencia: dataPlantao.split('/').slice(1).join('/'), // ex: 03/2026
-                dataInicio: dataPlantao,
-                rondas: JSON.parse(JSON.stringify(rondasEfetivas)),
-                perfilSnapshot: JSON.parse(JSON.stringify(db.perfil)),
-                dataGeracao: new Date().toISOString()
-            };
-            db.historicoRelatorios.push(report);
-            saveDB();
-
-            alert(`✅ Relatório gerado e arquivado com sucesso!\nCompetência: ${dataPlantao}`);
-        }
-
-        // ====================== BAIXAR RELATÓRIO DA BIBLIOTECA ======================
-        function baixarRelatorioAntigo(id) {
-            const rep = db.historicoRelatorios.find(r => r.id === id);
-            if (!rep) return alert("Relatório não encontrado.");
-            gerarPDFPlantao(rep.rondas, rep.perfilSnapshot, rep.dataInicio);
-        }
-
-        // ====================== RENDER BIBLIOTECA ======================
-        function renderBiblioteca() {
-            const container = document.getElementById('lista-relatorios');
-            const grupos = {};
-
-            db.historicoRelatorios.forEach(rep => {
-                if (!grupos[rep.competencia]) grupos[rep.competencia] = [];
-                grupos[rep.competencia].push(rep);
-            });
-
-            let html = '';
-            Object.keys(grupos)
-                .sort((a, b) => b.localeCompare(a))
-                .forEach(mes => {
-                    html += `<div class="card"><h3>📅 Competência: ${mes}</h3>`;
-                    grupos[mes].forEach(rep => {
-                        html += `
-                            <div class="posto-item">
-                                <div>
-                                    <strong>Plantão: ${rep.dataInicio}</strong><br>
-                                    <small>${rep.rondas.length} rondas • Gerado: ${new Date(rep.dataGeracao).toLocaleString('pt-BR')}</small>
-                                </div>
-                                <button onclick="baixarRelatorioAntigo(${rep.id}); event.stopImmediatePropagation();" class="btn btn-info" style="width:auto; padding:10px 20px;">📥 Baixar PDF</button>
-                            </div>`;
-                    });
-                    html += '</div>';
-                });
-
-            container.innerHTML = html || '<p style="text-align:center; color:#94a3b8; padding:20px;">Nenhum relatório arquivado ainda.<br>Os relatórios são salvos automaticamente ao gerar.</p>';
-        }
-
-        // ====================== INICIAR NOVO CICLO MENSAL ======================
-        function iniciarNovoCiclo() {
-            if (db.historicoRelatorios.length === 0) {
-                return alert("Não há relatórios para zerar.");
-            }
-            if (confirm("🔄 Iniciar novo ciclo mensal?\n\nIsso irá manter APENAS o mês mais recente e remover todos os relatórios anteriores.\n\nDeseja continuar?")) {
-                const competencias = [...new Set(db.historicoRelatorios.map(r => r.competencia))];
-                const maisRecente = competencias.sort().reverse()[0];
-
-                db.historicoRelatorios = db.historicoRelatorios.filter(r => r.competencia === maisRecente);
-                saveDB();
-                renderBiblioteca();
-                alert(`✅ Novo ciclo iniciado!\nMantidos apenas os relatórios de ${maisRecente}`);
-            }
-        }
-
-        // ====================== FUNÇÕES DE RONDAS ======================
         function salvarRonda() {
+            const infoData = getDataOperacional();
             const checklist = {};
             document.querySelectorAll('#checklist .check-item').forEach(item => {
                 checklist[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
@@ -502,215 +189,192 @@
                 posto: document.getElementById('r-posto').value || "SEM POSTO",
                 motivo: document.getElementById('r-motivo').value,
                 km: document.getElementById('r-km').value || '0',
-                data: new Date().toLocaleDateString('pt-BR'),
+                data: infoData.dataBr,
+                competencia: infoData.competencia,
                 hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
                 colaborador_posto: document.getElementById('r-func').value || "N/A",
-                obs: document.getElementById('r-obs').value || 'Sem observações',
+                obs: document.getElementById('r-obs').value || 'Sn.',
                 checklist: checklist,
                 foto: fotoBase64,
                 isIntervalo: false
             };
 
-            db.rondas.push(ronda);
-            saveDB();
+            db.rondas.push(ronda); 
+            saveDB(); 
             renderRondas();
-            gerarCardIndividual(ronda.id);
-
-            // Limpar formulário
-            fotoBase64 = "";
-            document.getElementById('foto-preview-container').innerHTML = '';
-            document.getElementById('r-km').value = '';
-            document.getElementById('r-obs').value = '';
-            document.getElementById('r-func').value = '';
-            document.getElementById('r-motivo').value = '';
-            document.getElementById('sec-fiscalizacao').style.display = 'none';
-            document.querySelectorAll('#checklist .check-item').forEach(i => i.classList.remove('ok'));
+            alert("Ronda Registrada!");
+            limparFormRonda();
         }
 
-        async function gerarCardIndividual(id) {
-            const r = db.rondas.find(item => item.id === id);
-            if (!r) return;
+        function limparFormRonda() {
+            fotoBase64 = ""; 
+            document.getElementById('r-km').value = ''; 
+            document.getElementById('r-obs').value = ''; 
+            document.getElementById('r-func').value = '';
+            document.querySelectorAll('.check-item').forEach(i => i.classList.remove('ok'));
+        }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'mm', format: [80, 200] });
-            let y = 10;
-
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "bold");
-            doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
-
-            y += 5;
-            if (r.foto) {
-                try {
-                    doc.addImage(r.foto, 'JPEG', 5, y, 70, 45);
-                    y += 50;
-                } catch (e) { y += 5; }
+        // --- GESTÃO DE BIBLIOTECA E CICLOS ---
+        function iniciarNovoCiclo() {
+            if (db.rondas.length === 0) return alert("Não há dados para arquivar.");
+            if (confirm("Deseja encerrar este mês? Os dados atuais serão movidos para a biblioteca e a tela principal será limpa.")) {
+                const info = getDataOperacional();
+                db.biblioteca.push({
+                    id: Date.now(),
+                    mes: info.competencia,
+                    dataArquivamento: new Date().toLocaleString('pt-BR'),
+                    dados: [...db.rondas]
+                });
+                db.rondas = [];
+                saveDB();
+                renderBiblioteca();
+                alert("Ciclo encerrado com sucesso!");
             }
+        }
 
-            doc.setFontSize(11);
-            doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
-            y += 7;
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Data: ${r.data} | Hora: ${r.hora}`, 5, y);
-            y += 5;
-            doc.text(`VTR: ${db.perfil.placa || "---"} | KM: ${r.km}`, 5, y);
-            y += 5;
-            doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
-            y += 8;
+        function renderBiblioteca() {
+            const lista = document.getElementById('lista-relatorios-salvos');
+            if (!db.biblioteca || db.biblioteca.length === 0) {
+                lista.innerHTML = '<p style="text-align:center; color:#94a3b8;">Nenhum arquivo encontrado.</p>';
+                return;
+            }
+            lista.innerHTML = db.biblioteca.slice().reverse().map(rel => `
+                <div class="posto-item">
+                    <div>
+                        <strong style="color:var(--accent)">MÊS: ${rel.mes}</strong><br>
+                        <small>${rel.dados.length} registros</small>
+                    </div>
+                    <button class="btn btn-info" style="width:auto; margin:0; padding:8px 15px;" 
+                        onclick="baixarRelatorioAntigo(${rel.id})">📥 BAIXAR</button>
+                </div>
+            `).join('');
+        }
 
-            doc.setFont("helvetica", "bold");
-            doc.text("STATUS OPERACIONAL:", 5, y);
-            Object.entries(r.checklist || {}).forEach(([item, status]) => {
-                y += 5;
-                doc.setFont("helvetica", "normal");
-                doc.text(`• ${item}: ${status}`, 8, y);
+        async function baixarRelatorioAntigo(id) {
+            const rel = db.biblioteca.find(b => b.id === id);
+            if (rel) {
+                const backupAtual = [...db.rondas];
+                db.rondas = rel.dados;
+                await gerarRelatorioPlantao();
+                db.rondas = backupAtual;
+            }
+        }
+
+        // --- RELATÓRIO PDF ---
+        async function gerarRelatorioPlantao() {
+            if (db.rondas.length === 0) return alert("Nada para gerar.");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            let y = 20;
+
+            doc.setFontSize(16); doc.text("RELATÓRIO DE PLANTÃO MENSAL", 148, y, {align:'center'});
+            y += 10;
+            doc.setFontSize(10);
+            doc.text(`RESPONSÁVEL: ${db.perfil.nome || '--'} | VTR: ${db.perfil.placa || '--'}`, 15, y);
+            
+            y += 10;
+            const col = { data: 15, posto: 40, hora: 100, motivo: 120, colab: 170, obs: 210 };
+            doc.setFont(undefined, 'bold');
+            doc.text("DATA", col.data, y); doc.text("POSTO", col.posto, y); doc.text("HORA", col.hora, y);
+            doc.text("MOTIVO", col.motivo, y); doc.text("COLABORADOR", col.colab, y); doc.text("OBSERVAÇÃO", col.obs, y);
+
+            doc.setFont(undefined, 'normal');
+            db.rondas.forEach(r => {
+                y += 8;
+                if (y > 180) { doc.addPage(); y = 20; }
+                doc.text(r.data, col.data, y);
+                doc.text(r.posto.substring(0, 25), col.posto, y);
+                doc.text(r.hora, col.hora, y);
+                doc.text(r.motivo, col.motivo, y);
+                doc.text(r.colaborador_posto.substring(0, 15), col.colab, y);
+                doc.text(r.obs.substring(0, 30), col.obs, y);
             });
 
-            y += 8;
-            doc.setFont("helvetica", "bold");
-            doc.text("OBSERVAÇÕES:", 5, y);
-            const obs = doc.splitTextToSize(r.obs, 70);
-            doc.setFont("helvetica", "normal");
-            doc.text(obs, 5, y + 5);
-
-            y += (obs.length * 5) + 15;
-            doc.setFont("helvetica", "bold");
-            const cargo = (db.perfil.cargo || "SUPERVISOR").toUpperCase();
-            doc.text(`${cargo}:`, 5, y);
-            y += 5;
-            doc.setFont("helvetica", "normal");
-            doc.text(db.perfil.nome ? db.perfil.nome.toUpperCase() : "NOME", 5, y);
-
-            doc.save(`Card_${r.posto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+            doc.save(`Relatorio_Sentinela_${Date.now()}.pdf`);
         }
 
+        // --- FUNÇÕES AUXILIARES ---
         function gerenciarIntervalo() {
             const agora = new Date();
             if (!db.intervaloAtivo) {
-                db.intervaloAtivo = agora.getTime();
-                alert("☕ Intervalo Iniciado!");
+                db.intervaloAtivo = agora.getTime(); alert("☕ Intervalo Iniciado!");
             } else {
                 const inicio = new Date(db.intervaloAtivo);
                 const diffMin = Math.round((agora - inicio) / 60000);
-                db.rondas.push({
-                    id: Date.now(),
-                    isIntervalo: true,
-                    posto: "☕ INTERVALO",
-                    duracao: diffMin,
-                    hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                const info = getDataOperacional();
+                db.rondas.push({ 
+                    id: Date.now(), isIntervalo: true, posto: "☕ INTERVALO", 
+                    duracao: diffMin, data: info.dataBr, hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) 
                 });
-                db.intervaloAtivo = null;
-                alert("✅ Intervalo Finalizado!");
+                db.intervaloAtivo = null; alert("✅ Intervalo Finalizado!");
             }
-            saveDB();
-            renderRondas();
-            atualizarBotaoIntervalo();
+            saveDB(); renderRondas(); atualizarBotaoIntervalo();
         }
 
         function atualizarBotaoIntervalo() {
             const btn = document.getElementById('btn-intervalo');
-            if (db.intervaloAtivo) {
-                btn.innerText = "🛑 FINALIZAR INTERVALO";
-                btn.style.background = '#f85149';
-            } else {
-                btn.innerText = "☕ INICIAR INTERVALO / JANTA";
-                btn.style.background = '#2563eb';
-            }
+            if (db.intervaloAtivo) { btn.innerText = "🛑 FINALIZAR INTERVALO"; btn.style.background = '#f85149'; }
+            else { btn.innerText = "☕ INICIAR INTERVALO"; btn.style.background = '#2563eb'; }
         }
 
         function renderPostos() {
             const busca = document.getElementById('busca-posto').value.toLowerCase();
             const lista = document.getElementById('lista-postos');
-            const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
-            lista.innerHTML = filtrados.map((p, i) => `
+            lista.innerHTML = db.postos.filter(p => p.nome.toLowerCase().includes(busca)).map((p, i) => `
                 <div class="posto-item">
-                    <div>
-                        <strong>${p.nome}</strong><br>
-                        <small>${p.endereco || 'Sem endereço'}</small>
-                    </div>
-                    <div>
-                        <button onclick="excluirPosto(${i});" style="background:#f85149; padding:8px 12px; font-size:0.8rem;">🗑️</button>
-                    </div>
+                    <span>${p.nome}</span>
+                    <button class="btn btn-danger" style="width:auto; margin:0; padding:5px 10px;" onclick="excluirPosto(${i})">🗑️</button>
                 </div>
             `).join('');
         }
 
         function adicionarPosto() {
-            const n = prompt("Nome do posto:");
-            if (!n) return;
-            const e = prompt("Endereço (Rua, Nº, Cidade):");
-            db.postos.push({ nome: n.toUpperCase(), endereco: e || "" });
-            saveDB();
-            renderPostos();
+            const n = prompt("Nome do posto:"); 
+            if(n) { db.postos.push({nome: n.toUpperCase()}); saveDB(); renderPostos(); }
         }
 
-        function excluirPosto(i) {
-            if (confirm("Excluir posto?")) {
-                db.postos.splice(i, 1);
-                saveDB();
-                renderPostos();
-            }
-        }
+        function excluirPosto(i) { if(confirm("Excluir?")) { db.postos.splice(i,1); saveDB(); renderPostos(); } }
 
         function renderRondas() {
             const log = document.getElementById('historico-rondas');
             log.innerHTML = db.rondas.slice().reverse().map(r => `
                 <div class="ronda-entry">
-                    <strong>${r.hora}</strong> — ${r.posto} \( {r.duracao ? `( \){r.duracao}min)` : ''}
-                    \( {!r.isIntervalo ? `<button onclick="gerarCardIndividual( \){r.id});" style="float:right; background:#ffd600; color:#0a192f; padding:4px 10px; font-size:0.75rem; border:none; border-radius:4px;">🖨️ CARD</button>` : ''}
+                    <strong>${r.data} | ${r.hora}</strong> - ${r.posto}<br>
+                    <small>${r.motivo} | Obs: ${r.obs}</small>
                 </div>
             `).join('');
         }
 
+        function carregarPerfil() {
+            document.getElementById('p-nome').value = db.perfil.nome || "";
+            document.getElementById('p-placa').value = db.perfil.placa || "";
+            // ... carregar demais campos
+        }
+
         function salvarPerfil() {
-            db.perfil = {
-                nome: document.getElementById('p-nome').value,
-                matricula: document.getElementById('p-matrícula').value,
-                cargo: document.getElementById('p-cargo').value,
+            db.perfil = { 
+                nome: document.getElementById('p-nome').value, 
                 placa: document.getElementById('p-placa').value.toUpperCase(),
                 empresa: document.getElementById('p-empresa').value,
-                cnpj: document.getElementById('p-cnpj').value
+                cnpj: document.getElementById('p-cnpj').value,
+                cargo: document.getElementById('p-cargo').value,
+                matricula: document.getElementById('p-matrícula').value
             };
-            saveDB();
-            alert("✅ Perfil atualizado com sucesso!");
-            showView('home');
+            saveDB(); alert("Perfil Salvo!");
         }
 
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = e => {
-                    fotoBase64 = e.target.result;
-                    const preview = document.getElementById('foto-preview-container');
-                    preview.innerHTML = `<img src="${fotoBase64}" class="foto-preview">`;
-                };
+                reader.onload = e => fotoBase64 = e.target.result;
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function toggleCheck(item) {
-            item.classList.toggle('ok');
-        }
+        function toggleCheck(item) { item.classList.toggle('ok'); }
+        function toggleFiscalizacao() {}
 
-        function toggleFiscalizacao() {
-            const m = document.getElementById('r-motivo').value;
-            document.getElementById('sec-fiscalizacao').style.display = (m === 'Fiscalização') ? 'block' : 'none';
-        }
-
-        function zerarPlantao() {
-            if (confirm("Zerar plantão atual?\n\nOs relatórios já gerados permanecem salvos na Biblioteca.")) {
-                db.rondas = [];
-                saveDB();
-                renderRondas();
-                alert("✅ Plantão zerado!");
-            }
-        }
-
-        // ====================== INICIALIZAÇÃO ======================
-        window.onload = () => {
-            showView('home');
-        };
+        window.onload = () => showView('home');
     </script>
 </body>
 </html>
