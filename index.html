@@ -35,6 +35,7 @@
         .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
         .check-item { background: #1e2a44; border: 2px solid #475569; padding: 13px 10px; border-radius: 6px; text-align: center; font-size: 0.79rem; cursor: pointer; }
         .check-item.ok { border-color: var(--success); color: var(--success); background: rgba(35, 134, 54, 0.2); }
+        .mes-card { background: var(--card); border: 1px solid #334155; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -48,6 +49,7 @@
     <div class="card" onclick="showView('rondas')" style="cursor:pointer;">📍 <b>REGISTRO DE RONDAS</b></div>
     <div class="card" onclick="showView('postos')" style="cursor:pointer;">📋 <b>BASE DE POSTOS / ROTAS</b></div>
     <div class="card" onclick="gerarRelatorioPlantao()" style="cursor:pointer;">📄 <b>RELATÓRIO DE PLANTÃO (PDF)</b></div>
+    <div class="card" onclick="showView('relatorios')" style="cursor:pointer;">📚 <b>BIBLIOTECA DE RELATÓRIOS</b></div>
     <div class="card" onclick="showView('perfil')" style="cursor:pointer;">👤 <b>MEU PERFIL</b></div>
 </div>
 
@@ -82,7 +84,7 @@
         <label>Observações</label><textarea id="r-obs" rows="3"></textarea>
         <label>Foto</label><input type="file" id="r-foto" accept="image/*" capture="environment" onchange="previewImage(this)">
         <button class="btn btn-primary" onclick="salvarRonda()">✅ FINALIZAR E GERAR CARD</button>
-        <button class="btn btn-danger" onclick="zerarPlantao()">🗑️ ZERAR PLANTÃO</button>
+        <button class="btn btn-danger" onclick="zerarPlantao()">🗑️ ZERAR PLANTÃO ATUAL</button>
     </div>
     <div class="card"><h3>LOG DE ATIVIDADES</h3><div id="historico-rondas"></div></div>
 </div>
@@ -93,6 +95,41 @@
         <button class="btn btn-primary" onclick="adicionarPosto()">➕ ADICIONAR NOVO POSTO</button>
         <input type="text" id="busca-posto" placeholder="Pesquisar..." onkeyup="renderPostos()" style="margin-top:15px;">
         <div id="lista-postos" style="margin-top:15px;"></div>
+    </div>
+</div>
+
+<div id="view-relatorios" class="container hidden">
+    <!-- LISTA DE MESES -->
+    <div id="biblioteca-lista">
+        <div class="card">
+            <h3>📚 BIBLIOTECA DE RELATÓRIOS MENSAIS</h3>
+            <div id="lista-meses"></div>
+            
+            <button onclick="finalizarMesAtual()" class="btn btn-primary" style="margin-top:25px;">
+                🚀 FINALIZAR MÊS ATUAL E INICIAR NOVO MÊS
+            </button>
+            <p style="text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:8px;">
+                Os relatórios do mês atual serão arquivados automaticamente.<br>
+                Você poderá baixar todos os cards individuais a qualquer momento.
+            </p>
+        </div>
+    </div>
+
+    <!-- DETALHES DE UM MÊS (lista de relatórios individuais) -->
+    <div id="biblioteca-detalhes" class="hidden">
+        <div class="card">
+            <button onclick="voltarBiblioteca()" class="btn" style="background:#475569; color:white; margin-bottom:15px; width:auto; padding:12px 20px; font-size:0.9rem;">
+                ← VOLTAR À BIBLIOTECA
+            </button>
+            
+            <div id="detalhes-mes-titulo"></div>
+            
+            <div id="detalhes-lista-rondas" style="max-height:420px; overflow-y:auto; margin-top:10px;"></div>
+            
+            <button onclick="gerarRelatorioMensalSelecionado()" class="btn btn-primary" style="margin-top:20px;">
+                📄 GERAR RELATÓRIO COMPLETO DO MÊS (PDF)
+            </button>
+        </div>
     </div>
 </div>
 
@@ -113,25 +150,43 @@
     <div class="nav-item active" id="nav-home" onclick="showView('home')">🏠 HOME</div>
     <div class="nav-item" id="nav-rondas" onclick="showView('rondas')">📍 RONDAS</div>
     <div class="nav-item" id="nav-postos" onclick="showView('postos')">📋 POSTOS</div>
+    <div class="nav-item" id="nav-relatorios" onclick="showView('relatorios')">📚 RELATÓRIOS</div>
     <div class="nav-item" id="nav-perfil" onclick="showView('perfil')">👤 PERFIL</div>
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('sentinela_ops_db')) || { perfil: {}, postos: [], rondas: [], intervaloAtivo: null };
+    // ====================== BANCO DE DADOS ======================
+    let savedData = JSON.parse(localStorage.getItem('sentinela_ops_db')) || {};
+    let db = {
+        perfil: savedData.perfil || {},
+        postos: savedData.postos || [],
+        rondas: savedData.rondas || [],
+        intervaloAtivo: savedData.intervaloAtivo || null,
+        historicoMensal: savedData.historicoMensal || []   // NOVO: arquivo de meses anteriores
+    };
+
     let fotoBase64 = "";
+    let rondasExibidas = [];     // usado na tela de detalhes da biblioteca
+    let mesVisualizado = null;   // null = mês atual | número = índice no historicoMensal
 
-    function saveDB() { localStorage.setItem('sentinela_ops_db', JSON.stringify(db)); }
+    function saveDB() {
+        localStorage.setItem('sentinela_ops_db', JSON.stringify(db));
+    }
 
+    // ====================== NAVEGAÇÃO ======================
     function showView(view) {
         document.querySelectorAll('.container').forEach(v => v.classList.add('hidden'));
         document.getElementById('view-' + view).classList.remove('hidden');
+        
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        const nav = document.getElementById('nav-' + view); if(nav) nav.classList.add('active');
+        const nav = document.getElementById('nav-' + view);
+        if (nav) nav.classList.add('active');
+
         if (view === 'rondas') {
             document.getElementById('r-placa').value = db.perfil.placa || "";
             const sel = document.getElementById('r-posto');
             sel.innerHTML = '<option value="">Selecione um posto...</option>';
-            db.postos.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`);
+            db.postos.forEach(p => sel.innerHTML += `<option value="\( {p.nome}"> \){p.nome}</option>`);
             renderRondas();
             atualizarBotaoIntervalo();
         }
@@ -144,70 +199,246 @@
             document.getElementById('p-cnpj').value = db.perfil.cnpj || "";
         }
         if (view === 'postos') renderPostos();
+        if (view === 'relatorios') renderBiblioteca();
     }
 
-    function salvarRonda() {
-        const checklist = {};
-        document.querySelectorAll('#checklist .check-item').forEach(item => {
-            checklist[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
-        });
-        const ronda = {
-            id: Date.now(), posto: document.getElementById('r-posto').value || "SEM POSTO",
-            motivo: document.getElementById('r-motivo').value, km: document.getElementById('r-km').value || '0',
-            data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-            colaborador_posto: document.getElementById('r-func').value || "N/A", obs: document.getElementById('r-obs').value || 'Sn.',
-            checklist: checklist, foto: fotoBase64, isIntervalo: false
+    // ====================== BIBLIOTECA DE RELATÓRIOS (NOVA FUNCIONALIDADE) ======================
+    function renderBiblioteca() {
+        const container = document.getElementById('lista-meses');
+        let html = '';
+
+        // === MÊS ATUAL ===
+        const mesAtualNome = new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        const numAtual = db.rondas.length;
+        html += `
+        <div class="mes-card" onclick="mostrarDetalhesMes(null)">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>📅 MÊS ATUAL</strong><br>
+                    <span style="font-size:1.1rem; color:var(--accent);">${mesAtualNome.toUpperCase()}</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:2rem; font-weight:700; color:var(--accent);">${numAtual}</div>
+                    <small style="color:#94a3b8;">relatórios</small>
+                </div>
+            </div>
+            <button onclick="event.stopImmediatePropagation(); gerarRelatorioMensalAtual();" class="btn btn-info" style="margin-top:12px; padding:10px; font-size:0.85rem;">
+                📄 Gerar Relatório Completo do Mês
+            </button>
+        </div>`;
+
+        // === MESES ANTERIORES ===
+        html += `<h3 style="margin:25px 0 12px 0; font-size:0.95rem; color:#94a3b8;">📖 MESES ARQUIVADOS</h3>`;
+        
+        if (db.historicoMensal.length === 0) {
+            html += `<div style="text-align:center; padding:30px 20px; color:#64748b; font-style:italic;">Nenhum mês arquivado ainda.<br>Quando você finalizar o mês atual, ele aparecerá aqui.</div>`;
+        } else {
+            db.historicoMensal.forEach((mes, index) => {
+                html += `
+                <div class="mes-card" onclick="mostrarDetalhesMes(${index})">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>${mes.mes}</strong><br>
+                            <small style="color:#94a3b8;">${mes.rondas.length} relatórios</small>
+                        </div>
+                        <div style="background:var(--accent); color:#0a192f; font-weight:700; padding:6px 14px; border-radius:9999px; font-size:0.8rem;">VER</div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
+    function mostrarDetalhesMes(index) {
+        mesVisualizado = index;
+        const isAtual = index === null;
+        
+        const rondasDoMes = isAtual ? db.rondas : db.historicoMensal[index].rondas;
+        const titulo = isAtual 
+            ? `📅 ${new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()} (Mês Atual)`
+            : `📖 ${db.historicoMensal[index].mes}`;
+
+        // Prepara lista para os botões de download
+        const reversedRondas = rondasDoMes.slice().reverse();
+        rondasExibidas = reversedRondas;
+
+        // Monta HTML dos relatórios individuais
+        let listaHTML = reversedRondas.map((r, idx) => {
+            if (r.isIntervalo) {
+                return `
+                <div class="ronda-entry" style="border-left-color:#3b82f6;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>\( {r.hora}</strong> - ☕ INTERVALO ( \){r.duracao}min)</div>
+                    </div>
+                </div>`;
+            }
+            return `
+            <div class="ronda-entry">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${r.hora}</strong> — ${r.posto}<br>
+                        <small>${r.colaborador_posto} • KM ${r.km}</small>
+                    </div>
+                    <button onclick="gerarCardFromRondaExibida(${idx}); event.stopImmediatePropagation();" 
+                            style="background:var(--accent); color:#0a192f; border:none; padding:6px 14px; border-radius:6px; font-weight:700; font-size:0.75rem; cursor:pointer;">
+                        🖨️ CARD
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+
+        if (listaHTML === '') listaHTML = `<p style="text-align:center; padding:40px 20px; color:#64748b;">Nenhum relatório encontrado neste mês.</p>`;
+
+        // Mostra tela de detalhes
+        document.getElementById('biblioteca-lista').classList.add('hidden');
+        const detalhes = document.getElementById('biblioteca-detalhes');
+        detalhes.classList.remove('hidden');
+
+        document.getElementById('detalhes-mes-titulo').innerHTML = `<h3 style="margin:0 0 15px 0;">${titulo}</h3>`;
+        document.getElementById('detalhes-lista-rondas').innerHTML = listaHTML;
+    }
+
+    function voltarBiblioteca() {
+        document.getElementById('biblioteca-detalhes').classList.add('hidden');
+        document.getElementById('biblioteca-lista').classList.remove('hidden');
+        mesVisualizado = null;
+        renderBiblioteca();
+    }
+
+    function finalizarMesAtual() {
+        if (db.rondas.length === 0) {
+            alert("⚠️ Não há relatórios no mês atual para arquivar.");
+            return;
+        }
+        if (!confirm("✅ Finalizar o mês atual?\n\n• Todos os relatórios serão arquivados na Biblioteca\n• Um novo mês será iniciado (rondas zeradas)\n\nDeseja continuar?")) {
+            return;
+        }
+
+        const agora = new Date();
+        const mesNome = agora.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+
+        const monthlyEntry = {
+            id: Date.now(),
+            mes: mesNome,
+            anoMes: `\( {agora.getFullYear()}- \){String(agora.getMonth() + 1).padStart(2, '0')}`,
+            rondas: [...db.rondas]
         };
-        db.rondas.push(ronda); saveDB(); renderRondas();
-        gerarCardIndividual(ronda.id);
-        fotoBase64 = ""; document.getElementById('r-km').value = ''; document.getElementById('r-obs').value = ''; document.getElementById('r-func').value = '';
+
+        db.historicoMensal.unshift(monthlyEntry); // mais recente no topo
+        db.rondas = [];
+        saveDB();
+
+        alert(`🎉 Mês ${mesNome} arquivado com sucesso!\n\nNova biblioteca iniciada.`);
+        
+        // Se estiver na tela de relatórios, atualiza automaticamente
+        if (!document.getElementById('view-relatorios').classList.contains('hidden')) {
+            renderBiblioteca();
+        }
+        // Atualiza log de rondas (agora vazio)
+        if (!document.getElementById('view-rondas').classList.contains('hidden')) {
+            renderRondas();
+        }
     }
 
-    async function gerarCardIndividual(id) {
-        const r = db.rondas.find(item => item.id === id); if (!r) return;
+    // ====================== RELATÓRIOS (PDF) ======================
+    function gerarCard(r) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'mm', format: [80, 200] });
         let y = 10;
-        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
-        y += 5; if (r.foto) { try { doc.addImage(r.foto, 'JPEG', 5, y, 70, 45); y += 50; } catch (e) { y += 5; } }
-        doc.setFontSize(11); doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
-        y += 7; doc.setFontSize(8); doc.setFont("helvetica", "normal");
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("COMPROVANTE DE RONDA", 40, y, { align: "center" });
+        y += 5;
+
+        if (r.foto) {
+            try {
+                doc.addImage(r.foto, 'JPEG', 5, y, 70, 45);
+                y += 50;
+            } catch (e) { y += 5; }
+        }
+
+        doc.setFontSize(11);
+        doc.text(r.posto.toUpperCase(), 40, y, { align: "center" });
+        y += 7;
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
         doc.text(`Data: ${r.data} | Hora: ${r.hora}`, 5, y);
-        y += 5; doc.text(`VTR: ${db.perfil.placa || "---"} | KM: ${r.km}`, 5, y);
-        y += 5; doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
-        y += 8; doc.setFont("helvetica", "bold"); doc.text("STATUS OPERACIONAL:", 5, y);
-        Object.entries(r.checklist || {}).forEach(([item, status]) => { y += 5; doc.setFont("helvetica", "normal"); doc.text(`• ${item}: ${status}`, 8, y); });
-        y += 8; doc.setFont("helvetica", "bold"); doc.text("OBSERVAÇÕES:", 5, y);
-        const obs = doc.splitTextToSize(r.obs, 70); doc.setFont("helvetica", "normal"); doc.text(obs, 5, y + 5);
-        y += (obs.length * 5) + 15; doc.setFont("helvetica", "bold");
+        y += 5;
+        doc.text(`VTR: ${db.perfil.placa || "---"} | KM: ${r.km}`, 5, y);
+        y += 5;
+        doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
+        y += 8;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("STATUS OPERACIONAL:", 5, y);
+        y += 5;
+        Object.entries(r.checklist || {}).forEach(([item, status]) => {
+            doc.setFont("helvetica", "normal");
+            doc.text(`• ${item}: ${status}`, 8, y);
+            y += 5;
+        });
+
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.text("OBSERVAÇÕES:", 5, y);
+        const obs = doc.splitTextToSize(r.obs || 'Sn.', 70);
+        doc.setFont("helvetica", "normal");
+        doc.text(obs, 5, y + 5);
+        y += (obs.length * 5) + 15;
+
         const cargo = (db.perfil.cargo || "SUPERVISOR").toUpperCase();
-        doc.text(`${cargo}:`, 5, y); y += 5; doc.setFont("helvetica", "normal"); doc.text(db.perfil.nome.toUpperCase(), 5, y);
-        doc.save(`Card_${r.posto}.pdf`);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${cargo}:`, 5, y);
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.text((db.perfil.nome || "NOME").toUpperCase(), 5, y);
+
+        doc.save(`Card_${r.posto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
     }
 
+    function gerarCardIndividual(id) {
+        const r = db.rondas.find(item => item.id === id);
+        if (!r) return;
+        gerarCard(r);
+    }
+
+    function gerarCardFromRondaExibida(idx) {
+        const r = rondasExibidas[idx];
+        if (!r || r.isIntervalo) return;
+        gerarCard(r);
+    }
+
+    // Relatório completo do mês atual (mantido para compatibilidade)
     async function gerarRelatorioPlantao() {
+        gerarRelatorioMensal(db.rondas, new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' }));
+    }
+
+    // Relatório completo para qualquer mês (novo)
+    function gerarRelatorioMensal(rondasParam, mesDisplay) {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4'); // Formato Paisagem (deitado) 
+        const doc = new jsPDF('l', 'mm', 'a4');
         
-        if (!db.perfil.nome || db.rondas.length === 0) {
-            alert("⚠️ Complete seu perfil primeiro.");
+        if (!db.perfil.nome || rondasParam.length === 0) {
+            alert("⚠️ Complete seu perfil primeiro ou não há relatórios neste mês.");
             return;
         }
 
         const margemEsq = 15;
         let y = 15;
-        const rondasEfetivas = db.rondas.filter(r => !r.isIntervalo);
+        const rondasEfetivas = rondasParam.filter(r => !r.isIntervalo);
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("RELATÓRIO DE PLANTÃO", 148.5, y, { align: "center" });
+        doc.text(`RELATÓRIO DE PLANTÃO - ${mesDisplay.toUpperCase()}`, 148.5, y, { align: "center" });
         
         y += 15;
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
-        doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, margemEsq, y);
+        doc.text(`PERÍODO: ${mesDisplay}`, margemEsq, y);
         y += 10;
-        // Puxa Nome, Cargo e Matrícula do seu Perfil [cite: 18, 19]
         doc.text(`${db.perfil.nome.toUpperCase()}   ${db.perfil.cargo.toUpperCase()}   MAT: ${db.perfil.matricula || 'N/C'}`, margemEsq, y);
 
         y += 15;
@@ -241,26 +472,95 @@
         doc.text(db.perfil.empresa.toUpperCase() || "EMPRESA", 148.5, rodapeY - 6, { align: "center" });
         doc.text(`CNPJ: ${db.perfil.cnpj || "CNPJ"}`, 148.5, rodapeY, { align: "center" });
 
-        doc.save(`Relatorio_Sentinela.pdf`);
+        doc.save(`Relatorio_Sentinela_${mesDisplay.replace(/ /g, '_')}.pdf`);
+    }
+
+    function gerarRelatorioMensalAtual() {
+        gerarRelatorioMensal(db.rondas, new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' }));
+    }
+
+    function gerarRelatorioMensalSelecionado() {
+        const isAtual = mesVisualizado === null;
+        const rondasDoMes = isAtual ? db.rondas : db.historicoMensal[mesVisualizado].rondas;
+        const mesDisplay = isAtual 
+            ? new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
+            : db.historicoMensal[mesVisualizado].mes;
+        gerarRelatorioMensal(rondasDoMes, mesDisplay);
+    }
+
+    // ====================== FUNÇÕES EXISTENTES (mantidas e adaptadas) ======================
+    function salvarRonda() {
+        const checklist = {};
+        document.querySelectorAll('#checklist .check-item').forEach(item => {
+            checklist[item.innerText] = item.classList.contains('ok') ? 'OK' : 'PEND';
+        });
+        const ronda = {
+            id: Date.now(),
+            posto: document.getElementById('r-posto').value || "SEM POSTO",
+            motivo: document.getElementById('r-motivo').value,
+            km: document.getElementById('r-km').value || '0',
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+            colaborador_posto: document.getElementById('r-func').value || "N/A",
+            obs: document.getElementById('r-obs').value || 'Sn.',
+            checklist: checklist,
+            foto: fotoBase64,
+            isIntervalo: false
+        };
+        db.rondas.push(ronda);
+        saveDB();
+        renderRondas();
+        gerarCard(ronda);                    // já gera o card automaticamente
+        fotoBase64 = "";
+        document.getElementById('r-km').value = '';
+        document.getElementById('r-obs').value = '';
+        document.getElementById('r-func').value = '';
     }
 
     function gerenciarIntervalo() {
         const agora = new Date();
         if (!db.intervaloAtivo) {
-            db.intervaloAtivo = agora.getTime(); alert("☕ Intervalo Iniciado!");
+            db.intervaloAtivo = agora.getTime();
+            alert("☕ Intervalo Iniciado!");
         } else {
             const inicio = new Date(db.intervaloAtivo);
             const diffMin = Math.round((agora - inicio) / 60000);
-            db.rondas.push({ id: Date.now(), isIntervalo: true, posto: "☕ INTERVALO", duracao: diffMin, hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-            db.intervaloAtivo = null; alert("✅ Intervalo Finalizado!");
+            db.rondas.push({
+                id: Date.now(),
+                isIntervalo: true,
+                posto: "☕ INTERVALO",
+                duracao: diffMin,
+                hora: inicio.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            });
+            db.intervaloAtivo = null;
+            alert("✅ Intervalo Finalizado!");
         }
-        saveDB(); renderRondas(); atualizarBotaoIntervalo();
+        saveDB();
+        renderRondas();
+        atualizarBotaoIntervalo();
     }
 
     function atualizarBotaoIntervalo() {
         const btn = document.getElementById('btn-intervalo');
-        if (db.intervaloAtivo) { btn.innerText = "🛑 FINALIZAR INTERVALO"; btn.style.background = '#f85149'; }
-        else { btn.innerText = "☕ INICIAR INTERVALO / JANTA"; btn.style.background = '#2563eb'; }
+        if (db.intervaloAtivo) {
+            btn.innerText = "🛑 FINALIZAR INTERVALO";
+            btn.style.background = '#f85149';
+        } else {
+            btn.innerText = "☕ INICIAR INTERVALO / JANTA";
+            btn.style.background = '#2563eb';
+        }
+    }
+
+    function renderRondas() {
+        const log = document.getElementById('historico-rondas');
+        log.innerHTML = db.rondas.slice().reverse().map(r => `
+            <div class="ronda-entry" style="${r.isIntervalo ? 'border-left-color:#3b82f6;' : ''}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${r.hora}</strong> - ${r.posto} ${r.duracao ? '('+r.duracao+'min)' : ''}</div>
+                    \( {!r.isIntervalo ? `<button onclick="gerarCardIndividual( \){r.id});" style="background:var(--accent); border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.7rem;">🖨️ CARD</button>` : ''}
+                </div>
+            </div>
+        `).join('');
     }
 
     function renderPostos() {
@@ -269,9 +569,9 @@
         const filtrados = db.postos.filter(p => p.nome.toLowerCase().includes(busca));
         lista.innerHTML = filtrados.map((p, i) => `
             <div class="posto-item">
-                <div><b>${p.nome}</b><br><small>${p.endereco || 'Sem endereço'}</small></div>
+                <div><b>\( {p.nome}</b><br><small> \){p.endereco || 'Sem endereço'}</small></div>
                 <div style="display:flex; gap:5px;">
-                    <button onclick="window.open('http://googleusercontent.com/maps.google.com/4{encodeURIComponent(p.endereco || p.nome)}')" style="background:var(--success); color:white; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ROTA</button>
+                    <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco || p.nome)}','_blank')" style="background:var(--success); color:white; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ROTA</button>
                     <button onclick="excluirPosto(${i})" style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; cursor:pointer;">🗑️</button>
                 </div>
             </div>
@@ -281,34 +581,59 @@
     function adicionarPosto() {
         const n = prompt("Nome do posto:"); if(!n) return;
         const e = prompt("Endereço (Rua, Nº, Cidade):");
-        db.postos.push({nome: n.toUpperCase(), endereco: e || ""}); saveDB(); renderPostos();
+        db.postos.push({nome: n.toUpperCase(), endereco: e || ""});
+        saveDB();
+        renderPostos();
     }
 
-    function excluirPosto(i) { if(confirm("Excluir posto?")) { db.postos.splice(i,1); saveDB(); renderPostos(); } }
-
-    function renderRondas() {
-        const log = document.getElementById('historico-rondas');
-        log.innerHTML = db.rondas.slice().reverse().map(r => `
-            <div class="ronda-entry" style="${r.isIntervalo ? 'border-left-color:#3b82f6;' : ''}">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>${r.hora}</strong> - ${r.posto} ${r.duracao ? '('+r.duracao+'min)' : ''}</div>
-                    ${!r.isIntervalo ? `<button onclick="gerarCardIndividual(${r.id})" style="background:var(--accent); border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.7rem;">🖨️ CARD</button>` : ''}
-                </div>
-            </div>
-        `).join('');
+    function excluirPosto(i) {
+        if(confirm("Excluir posto?")) {
+            db.postos.splice(i,1);
+            saveDB();
+            renderPostos();
+        }
     }
 
     function salvarPerfil() {
-        db.perfil = { nome: document.getElementById('p-nome').value, matricula: document.getElementById('p-matrícula').value, cargo: document.getElementById('p-cargo').value, placa: document.getElementById('p-placa').value.toUpperCase(), empresa: document.getElementById('p-empresa').value, cnpj: document.getElementById('p-cnpj').value };
-        saveDB(); alert("✅ Perfil Atualizado!");
+        db.perfil = {
+            nome: document.getElementById('p-nome').value,
+            matricula: document.getElementById('p-matrícula').value,
+            cargo: document.getElementById('p-cargo').value,
+            placa: document.getElementById('p-placa').value.toUpperCase(),
+            empresa: document.getElementById('p-empresa').value,
+            cnpj: document.getElementById('p-cnpj').value
+        };
+        saveDB();
+        alert("✅ Perfil Atualizado!");
     }
 
-    function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => fotoBase64 = e.target.result; reader.readAsDataURL(input.files[0]); } }
-    function toggleCheck(item) { item.classList.toggle('ok'); }
-    function toggleFiscalizacao() { const m = document.getElementById('r-motivo').value; document.getElementById('sec-fiscalizacao').style.display = (m === 'Fiscalização') ? 'block' : 'none'; }
-    function zerarPlantao() { if(confirm("Zerar tudo?")) { db.rondas = []; saveDB(); renderRondas(); } }
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => fotoBase64 = e.target.result;
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-    window.onload = () => showView('home');
+    function toggleCheck(item) { item.classList.toggle('ok'); }
+    function toggleFiscalizacao() {
+        const m = document.getElementById('r-motivo').value;
+        document.getElementById('sec-fiscalizacao').style.display = (m === 'Fiscalização') ? 'block' : 'none';
+    }
+
+    function zerarPlantao() {
+        if(confirm("🗑️ Zerar TODOS os relatórios do mês atual?\n\n(Os meses já arquivados na biblioteca permanecerão intactos)")) {
+            db.rondas = [];
+            saveDB();
+            renderRondas();
+            alert("✅ Plantão zerado.");
+        }
+    }
+
+    // ====================== INICIALIZAÇÃO ======================
+    window.onload = () => {
+        showView('home');
+    };
 </script>
 </body>
 </html>
