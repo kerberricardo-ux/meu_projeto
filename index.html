@@ -64,6 +64,9 @@
         <label>Missão</label>
         <select id="r-motivo" onchange="toggleFiscalizacao()">
             <option value="Fiscalização">Fiscalização</option>
+            <option value="De base">De base</option>
+            <option value="Complemento">Complemento</option>
+            <option value="Cobertura">Cobertura</option>
             <option value="Deslocamento">Deslocamento</option>
             <option value="Entrega de Material">Entrega de Material</option>
             <option value="Outros">Outros</option>
@@ -134,6 +137,7 @@
             db.postos.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`);
             renderRondas();
             atualizarBotaoIntervalo();
+            toggleFiscalizacao(); // Garante estado inicial correto do checklist
         }
         if (view === 'perfil') {
             document.getElementById('p-nome').value = db.perfil.nome || "";
@@ -176,7 +180,15 @@
         y += 5; doc.text(`VTR: ${db.perfil.placa || "---"} | KM: ${r.km}`, 5, y);
         y += 5; doc.text(`COLABORADOR: ${r.colaborador_posto.toUpperCase()}`, 5, y);
         y += 8; doc.setFont("helvetica", "bold"); doc.text("STATUS OPERACIONAL:", 5, y);
-        Object.entries(r.checklist || {}).forEach(([item, status]) => { y += 5; doc.setFont("helvetica", "normal"); doc.text(`• ${item}: ${status}`, 8, y); });
+        
+        // Só imprime checklist se for missão que exige fiscalização
+        const missoesCheck = ['Fiscalização', 'De base', 'Complemento', 'Cobertura'];
+        if(missoesCheck.includes(r.motivo)) {
+            Object.entries(r.checklist || {}).forEach(([item, status]) => { y += 5; doc.setFont("helvetica", "normal"); doc.text(`• ${item}: ${status}`, 8, y); });
+        } else {
+            y += 5; doc.setFont("helvetica", "normal"); doc.text(`Missão: ${r.motivo}`, 8, y);
+        }
+
         y += 8; doc.setFont("helvetica", "bold"); doc.text("OBSERVAÇÕES:", 5, y);
         const obs = doc.splitTextToSize(r.obs, 70); doc.setFont("helvetica", "normal"); doc.text(obs, 5, y + 5);
         y += (obs.length * 5) + 15; doc.setFont("helvetica", "bold");
@@ -284,7 +296,14 @@
 
     function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => fotoBase64 = e.target.result; reader.readAsDataURL(input.files[0]); } }
     function toggleCheck(item) { item.classList.toggle('ok'); }
-    function toggleFiscalizacao() { const m = document.getElementById('r-motivo').value; document.getElementById('sec-fiscalizacao').style.display = (m === 'Fiscalização') ? 'block' : 'none'; }
+    
+    function toggleFiscalizacao() { 
+        const m = document.getElementById('r-motivo').value; 
+        // Mostrar checklist para missões operacionais de conferência
+        const mostrarChecklist = ['Fiscalização', 'De base', 'Complemento', 'Cobertura'].includes(m);
+        document.getElementById('sec-fiscalizacao').style.display = mostrarChecklist ? 'block' : 'none'; 
+    }
+    
     function zerarPlantao() { if(confirm("Zerar tudo?")) { db.rondas = []; saveDB(); renderRondas(); } }
 
     window.onload = () => showView('home');
